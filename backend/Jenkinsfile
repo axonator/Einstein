@@ -20,8 +20,8 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 echo "******CHECKING OUT REPOSITORY********"
-                git url: 'https://github.com/AX-Krishnendu/Einstein.git',
-                branch: 'main'
+                git url: 'https://github.com/axonator/Einstein.git',
+                branch: 'production'
             }
         }
         
