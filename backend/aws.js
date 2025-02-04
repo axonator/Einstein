@@ -13,7 +13,7 @@ async function uploadFileToS3(fileBuffer, fileName, s3UploadPrefix, contentType)
     const params = {
         Bucket: process.env.S3_BUCKET_NAME,
         Key: `${s3UploadPrefix}${fileName}`,
-        Body: fileBuffer,
+        Body: new Uint8Array(fileBuffer),
         ACL: "public-read", // Set the correct permissions if needed
         ContentType: contentType, // Change as per file type
       };
