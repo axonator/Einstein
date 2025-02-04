@@ -110,155 +110,139 @@ router.get('/export/csv', async (req, res) => {
 });
 
 // Set up multer for file uploads
-// const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: 'uploads/' });
 
-// router.post('/import/csv', upload.single('file'), async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).json({ error: 'No file uploaded' });
-//     }
+router.post('/import/csv', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
 
-//     const filePath = req.file.path;
-//     const skippedRecords = [];
-//     const processedRecords = [];
-//     const errorsFilePath = `uploads/errors_${Date.now()}.csv`;
-//     const countryNames = new Set();
-//     const industryNames = new Set();
-//     let totalRecords = 0;
+    const filePath = req.file.path;
+    const skippedRecords = [];
+    const processedRecords = [];
+    const errorsFilePath = `uploads/errors_${Date.now()}.csv`;
+    let totalRecords = 0;
 
-//     // Read the CSV file and collect unique names for bulk ID mapping
-//     fs.createReadStream(filePath)
-//       .pipe(csv())
-//       .on('data', (row) => {
-//         if (row.country) countryNames.add(row.country);
-//         if (row.industry) industryNames.add(row.industry);
-//         totalRecords++;
-//       })
-//       .on('end', async () => {
-//         try {
-//           // Fetch IDs for countries, industries, and lead statuses
-//           const [countryIdMap, industryIdMap] = await Promise.all([
-//             helpers.getIdsByNames('country', [...countryNames]),
-//             helpers.getIdsByNames('industry', [...industryNames]),
-//           ]);
+    // Read the CSV file and process each row
+    const processCSV = async () => {
+      return new Promise((resolve, reject) => {
+        fs.createReadStream(filePath)
+          .pipe(csv())
+          .on('data', async (row) => {
+            
+            totalRecords++;
+            try {
+              // Validate required fields
+              if (!row.Email || !row['First Name'] || !row['Last Name']) {
+                
+                skippedRecords.push({
+                  record: row,
+                  reason: 'Missing required fields (email, first_name, last_name)',
+                });
+                return;
+              }
 
-//           // Re-read the CSV to process each row
-//           const processingPromises = [];
-//           fs.createReadStream(filePath)
-//             .pipe(csv())
-//             .on('data', (row) => {
-//               const rowPromise = (async () => {
-//                 try {
-//                   // Validate required fields
-//                   if (!row.email || !row.first_name || !row.last_name) {
-//                     skippedRecords.push({
-//                       record: row,
-//                       reason: 'Missing required fields (email, first_name, last_name)',
-//                     });
-//                     return;
-//                   }
+              // Check for duplicate email
+              const [existingContact] = await helpers.findContactByEmail(row.email);
+              if (existingContact) {
+                skippedRecords.push({
+                  record: row,
+                  reason: 'Email already exists',
+                });
+                return;
+              }
 
-//                   // Map foreign keys
-//                   const countryId = countryIdMap[row.country] || null;
-//                   const industryId = industryIdMap[row.industry] || null;
+              // Map foreign keys (country and industry)
+              const countryId = row.country ? await helpers.getIdByName('country', row.country) : null;
+              const industryId = row.industry ? await helpers.getIdByName('industry', row.industry) : null;
 
-//                   // Skip records with missing foreign key mappings
-//                   if (row.country && !countryId) {
-//                     skippedRecords.push({
-//                       record: row,
-//                       reason: 'Foreign key mapping failed for Country',
-//                     });
-//                     return;
-//                   }
-//                   if (row.industry && !industryId) {
-//                     skippedRecords.push({
-//                       record: row,
-//                       reason: 'Foreign key mapping failed for Industry',
-//                     });
-//                     return;
-//                   }
+              // Skip records with missing foreign key mappings
+              if (row.country && !countryId) {
+                skippedRecords.push({
+                  record: row,
+                  reason: 'Foreign key mapping failed for Country',
+                });
+                return;
+              }
+              if (row.industry && !industryId) {
+                skippedRecords.push({
+                  record: row,
+                  reason: 'Foreign key mapping failed for Industry',
+                });
+                return;
+              }
 
-//                   // Check for duplicate email
-//                   const [existingContact] = await helpers.findContactByEmail(row.email);
-//                   if (existingContact) {
-//                     skippedRecords.push({
-//                       record: row,
-//                       reason: 'Email already exists',
-//                     });
-//                     return;
-//                   }
+              // Insert valid record into the database
+              await helpers.insertContact({
+                email: row.email,
+                first_name: row.first_name,
+                last_name: row.last_name,
+                phone_number: row.phone_number || null,
+                company_name: row.company_name || null,
+                country_id: countryId,
+                industry_id: industryId,
+                assigned_to: row.assigned_to || null,
+                lead_source: row.lead_source || null,
+                job_title: row.job_title || null,
+                linked_in: row.linked_in || null,
+                address: row.address || null,
+                website: row.website || null,
+                company_hq: row.company_hq || null,
+                notes: row.notes || null,
+              });
 
-//                   // Insert valid record into the database
-//                   await helpers.insertContact({
-//                     email: row.email,
-//                     first_name: row.first_name,
-//                     last_name: row.last_name,
-//                     phone_number: row.phone_number || null,
-//                     company_name: row.company_name || null,
-//                     country_id: countryId,
-//                     industry_id: industryId,
-//                     assigned_to: row.assigned_to || null,
-//                     lead_source: row.lead_source || null,
-//                     job_title: row.job_title || null,
-//                     linked_in: row.linked_in || null,
-//                     address: row.address || null,
-//                     website: row.website || null,
-//                     company_hq: row.company_hq || null,
-//                     notes: row.notes || null,
-//                   });
+              processedRecords.push(row);
+            } catch (err) {
+              skippedRecords.push({
+                record: row,
+                reason: `Error: ${err.message}`,
+              });
+            }
+          })
+          .on('end', () => {
+            resolve();
+          })
+          .on('error', (err) => {
+            reject(err);
+          });
+      });
+    };
 
-//                   processedRecords.push(row);
-//                 } catch (err) {
-//                   skippedRecords.push({
-//                     record: row,
-//                     reason: `Error: ${err.message}`,
-//                   });
-//                 }
-//               })();
-//               processingPromises.push(rowPromise);
-//             })
-//             .on('end', async () => {
-//               try {
-//                 // Wait for all processing tasks to complete
-//                 await Promise.all(processingPromises);
+    // Process the CSV file
+    await processCSV();
 
-//                 // Write skipped records to CSV
-//                 const writeStream = fs.createWriteStream(errorsFilePath);
-//                 writeStream.write('email,first_name,last_name,phone,company,reason\n');
-//                 skippedRecords.forEach(({ record, reason }) => {
-//                   const recordValues = Object.values(record).join(',');
-//                   writeStream.write(`${recordValues},${reason}\n`);
-//                 });
-//                 writeStream.end();
+    // Write skipped records to a CSV file
+    const writeSkippedRecords = () => {
+      return new Promise((resolve, reject) => {
+        const writeStream = fs.createWriteStream(errorsFilePath);
+        writeStream.write('email,first_name,last_name,phone,company,reason\n');
+        skippedRecords.forEach(({ record, reason }) => {
+          const recordValues = Object.values(record).join(',');
+          writeStream.write(`${recordValues},${reason}\n`);
+        });
+        writeStream.end();
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+      });
+    };
 
-//                 // Clean up uploaded file
-//                 fs.unlinkSync(filePath);
+    await writeSkippedRecords();
 
-//                 // Respond with results
-//                 res.json({
-//                   message: 'Contacts imported successfully with some skipped records',
-//                   totalRecords,
-//                   processedCount: processedRecords.length,
-//                   skippedCount: skippedRecords.length,
-//                   skippedRecordsFile: errorsFilePath,
-//                 });
-//               } catch (err) {
-//                 res.status(500).json({ error: `Error processing records: ${err.message}` });
-//               }
-//             })
-//             .on('error', (err) => {
-//               res.status(500).json({ error: `Error reading CSV file: ${err.message}` });
-//             });
-//         } catch (err) {
-//           res.status(500).json({ error: `Error processing CSV: ${err.message}` });
-//         }
-//       })
-//       .on('error', (err) => {
-//         res.status(500).json({ error: `Error reading CSV file: ${err.message}` });
-//       });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// });
+    // Clean up uploaded file
+    fs.unlinkSync(filePath);
+
+    // Respond with results
+    res.json({
+      message: 'Contacts imported successfully with some skipped records',
+      totalRecords,
+      processedCount: processedRecords.length,
+      skippedCount: skippedRecords.length,
+      skippedRecordsFile: errorsFilePath,
+    });
+  } catch (err) {
+    res.status(500).json({ error: `Error processing CSV: ${err.message}` });
+  }
+});
   
 module.exports = router

@@ -28,7 +28,7 @@ function TaskCard({ task, fetchTasks,onEdit }) {
   }, [task, customFields]); // Re-run effect when task or customFields change
 
   return (
-    <div className="border m-2 rounded p-3 row" key={task.task_id}>
+    <div className="border m-2 rounded p-3 row" key={task.task_id} id={task.task_id}>
       <EditDeleteIcons task={task} fetchTasks={fetchTasks} onEdit={onEdit}/>
       <Taskcardtopsection task={task} />
       {signal && <Signal initalColor={signal} health={Health} task={task} fetchTasks={fetchTasks} />}

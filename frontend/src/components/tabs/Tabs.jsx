@@ -9,7 +9,7 @@ const Tabs = ({ tabs }) => {
   }
 
   return (
-    <div className="container mt-4">
+    <div className="m-3">
       <ul className="nav nav-tabs">
         {tabs.map((tab, index) => (
           <li className="nav-item" key={index}>
@@ -22,7 +22,7 @@ const Tabs = ({ tabs }) => {
           </li>
         ))}
       </ul>
-      <div className="tab-content border p-3 mt-2">
+      <div className="tab-content p-3 mt-2">
         <div className="tab-pane fade show active">
           {tabs[activeTab]?.content || <p>No content available</p>}
         </div>

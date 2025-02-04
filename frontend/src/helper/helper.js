@@ -25,7 +25,7 @@ async function getcustomFields(task_type_id,setError,setLoading) {
         });
         
         if (!response.ok) {
-            throw new Error(`Failed to fetch custom fields: ${response.status}`);
+            throw new Error(`Failed to fetch custom fields for task type id ${task_type_id}: ${response.status}`);
         }
         
         const data = await response.json();

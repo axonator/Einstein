@@ -92,6 +92,7 @@ const db = initDatabase();
   
     try {
       const [result] = await db.execute(query, values);
+      
       return { message: `Successfully updated ${result.affectedRows} rows in ${tableName}.` };
     } catch (err) {
       throw new Error(`Error updating data in ${tableName}: ${err.message}`);

@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const taskHelper = require('../helper/taskHelper');
 const helper = require('../helper/helpers')
-
+const taskHelper = require('../helper/taskHelper');
 
   router.post('/addNewRows', async (req, res) => {
     try {
@@ -138,44 +137,31 @@ const helper = require('../helper/helpers')
 
   //GET ALL THE TASK FROM THE TASK TABLE FOR THE MENTIONED TASK TYPE
   router.post('/get_scope', async (req, res) => {
-    const { display_name_singular,parent_task_id } = req.body;
-    ParentId = display_name_singular == "all" ? display_name_singular : parent_task_id;
+    const { 
+      taskTypeCode,
+      parent_task_id,
+      parent_ttype_id,
+      selected_tab_id,
+      page_size,
+      page_number } = req.body;
+    
+    ParentId = taskTypeCode == "all" ? taskTypeCode : parent_task_id;
     
     try {
-      const parent_task_type_id = await taskHelper.get_task_type_id(display_name_singular);
-      
-      const allowed_type_ids = await taskHelper.get_allowed_type_ids(parent_task_type_id);
-      
-      let alltasks = [];
+      const identifier = 'fk_task_type_id';
 
-      for (const id of allowed_type_ids) {
-        const tasks = await taskHelper.getTaskDetails(id, 'fk_task_type_id',ParentId);
-        for (const task of tasks) {
-          const task_id = task.task_id;
+      let alltasks = await taskHelper.getTaskDetails(selected_tab_id, identifier, ParentId, page_size, page_number);
+      let total = await taskHelper.countTotal(selected_tab_id,identifier,ParentId);
+      for (const task of alltasks) {
+        // Fetch and format custom fields
+        const customFieldsFormatted = await taskHelper.getTaskCustomDetails(task.task_id, 'task_id');
 
-          // Fetch and format custom fields
-          const customFields = await taskHelper.getTaskCustomDetails(task_id, 'task_id');
-          const customFieldsFormatted = {};
-          customFields.forEach(field => {
-            customFieldsFormatted[field.display_name_singular] = {
-              plural: field.display_name_plural,
-              value: field.value,
-              type: field.type,
-              custom_field_id: field.custom_field_id,
-              lookupId:field.lookup_id,
-            };
-          });
-
-          // Attach custom fields to the task
-          task.custom_fields = customFieldsFormatted;
-        }
-
-        // Combine tasks with the main array
-        alltasks = alltasks.concat(tasks);
+        // Attach custom fields to the task
+        task.custom_fields = customFieldsFormatted;
       }
 
       // Return all tasks with custom fields
-      res.json(alltasks);
+      res.json({alltasks : alltasks, total : total});
     } catch (err) {
       console.error(err);
       res.status(500).send(err);
@@ -205,7 +191,6 @@ const helper = require('../helper/helpers')
 
       // Delete the task
       const result = await helper.deleterow(id, table_name, column_name);
-      console.log(result);
       
       res.json(result);
     } catch (err) {
@@ -229,8 +214,7 @@ const helper = require('../helper/helpers')
   router.post('/updateTaskCustomFields/:id', async (req, res) => {
     try {
       const taskId = req.params.id; // Extract task ID from route parameter
-      const newId = req.body.newId; // Extract health ID from request body
-      const customFieldId = req.body.customFieldId
+      const {newId, customFieldId} = req.body
       const columnValues = { value: newId };
       const condition = { fk_custom_field_id: customFieldId ,fk_task_id:taskId};
       const table_name = 'custom_field__task';

@@ -2,9 +2,9 @@ import { useState,useEffect } from "react";
 import Logo from "./logo";
 import EditLogoModal from "./EditLogoModal";
 
-function LogoBox({size=80,company_website="axonator.com",task}) {
+function LogoBox({size=80,company_website,task}) {
     const profile_url = task?.custom_fields?.["Profile Picture"]?.value;
-    const imgLogoSrc= `https://img.logo.dev/${company_website}?token=pk_CVR_tKaFQ0mBXPEs9bO4Pw&size=${size}`;
+    const imgLogoSrc = company_website ? `https://img.logo.dev/${company_website}?token=pk_CVR_tKaFQ0mBXPEs9bO4Pw&size=${size}`:false;
     const defaultLogoSrc = `/assets/no preview 1.png`
     
     const [logoSrc, setLogoSrc] = useState(defaultLogoSrc);
@@ -15,7 +15,6 @@ function LogoBox({size=80,company_website="axonator.com",task}) {
             const response = await fetch(url, { method: "HEAD",mode: "no-cors" });
             if (response) {
                 const contentType = response.headers.get("Content-Type");
-                console.log("aooooo",url,contentType);
                 
                 return contentType && contentType.startsWith("image/");
             }else{
@@ -30,9 +29,10 @@ function LogoBox({size=80,company_website="axonator.com",task}) {
     useEffect(() => {
         const validateAndSetLogo = async () => {
             if (profile_url && isValidUrl(profile_url)) {
+                
                 setLogoSrc(profile_url);
             }
-            else if (isValidUrl(imgLogoSrc)) {
+            else if (company_website && isValidUrl(imgLogoSrc)) {
                 setLogoSrc(imgLogoSrc);
             } else {
                 setLogoSrc(defaultLogoSrc);

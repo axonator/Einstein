@@ -5,8 +5,7 @@ import Text from "./text";
 import { useState,useEffect } from "react";
 import axios from "axios";
 
-
-function FormComponent({ toggleModal,refreshTasks,parent_task_id,selectedTabId, selectedTabName, availableCustomFields, taskToEdit }) {
+function FormComponent({ toggleModal,refreshTasks,parent_task_id,selectedTabId, selectedTabName, availableCustomFields, taskToEdit, totalPages, setSortOrder, setCurrentPage}) {
   const [customFields, setCustomFields] = useState({});
   const [insertNewCustomFields,setnewcustomfields]= useState([]);;
   const [dropdownOptions, setDropdownOptions] = useState({});
@@ -22,9 +21,11 @@ function FormComponent({ toggleModal,refreshTasks,parent_task_id,selectedTabId, 
   const excludeOtherOption = ['Status','Health','Lead Type'];
 
   const [statuses, setStatuses] = useState([]); // For storing statuses list
-  // const [selectedStatus, setSelectedStatus] = useState("");
-  // const [selectedStatusid, setSelectedStatusid] = useState(0);
-
+  const columnCount = 3;
+  const columns = Array.from({ length: columnCount }, (_, index) =>
+    availableCustomFields.filter((_, i) => i % columnCount === index)
+  );
+  
   // Fetch function
   const fetchdropdownlist = async (table_name, column_name="*",condition='') => {
     try {
@@ -106,8 +107,8 @@ useEffect(() => {
     const initialCustomFields = {};
     availableCustomFields.forEach((field) => {
       const fieldName = field.display_name_singular;
-      const type = field.type;
       if(taskToEdit.custom_fields[fieldName]){
+        const type = field.type;
         if (type == 'choice') {
           initialCustomFields[field.custom_field_id] = taskToEdit.custom_fields[fieldName].lookupId || '';
         }else{
@@ -228,7 +229,9 @@ useEffect(() => {
     
           const result = await response.json();
           // Refresh the task list after adding a new task
-          refreshTasks();
+          setSortOrder('desc');
+          setCurrentPage(totalPages);
+          // refreshTasks();
           toggleModal();
         } catch (error) {
           console.error("Error adding custom fields:", error);
@@ -237,7 +240,9 @@ useEffect(() => {
         
       }else{
         // Refresh the task list after adding a new task
-        refreshTasks();
+        setSortOrder('desc');
+        setCurrentPage(totalPages);
+        // refreshTasks();
         toggleModal();
       }
     } catch (error) {
@@ -295,7 +300,7 @@ useEffect(() => {
 
   return (
     <div className="modal d-block bg-light bg-opacity-50">
-      <div className="modal-dialog">
+      <div className="modal-dialog modal-lg">
         <div className="modal-content p-4">
           <div className="modal-header">
             <h5 className="modal-title">{taskToEdit ? "Edit" : "Add New"} {selectedTabName}</h5>
@@ -335,73 +340,96 @@ useEffect(() => {
                 required ={true}
               />
 
-              {/* Render dynamic custom fields */}
-              {availableCustomFields.map((field) => (
-                <div className="mb-3" key={field.custom_field_id}>
-                  {field.type != "choice"?<label htmlFor={`customField-${field.custom_field_id}`} className="form-label">
-                    {field.display_name_singular}
-                  </label>:null}
-                  
-                  {field.type === "text" && (
-                    <Text
-                      id={`customField-${field.custom_field_id}`}
-                      placeholder={`Enter ${field.display_name_singular}`}
-                      onChange={(e) => handleCustomFieldChange(field.custom_field_id, e.target.value)}
-                      value={customFields[field.custom_field_id] || ''}
-                    />
-                  )}
-                  {field.type === "number" && (
-                    <input
-                      type="number"
-                      id={`customField-${field.custom_field_id}`}
-                      className="form-control"
-                      placeholder={`Enter ${field.display_name_singular}`}
-                      onChange={(e) => handleCustomFieldChange(field.custom_field_id, e.target.value)}
-                      onWheel={(e) => e.target.blur()} // Prevent number input from scrolling
-                      value={customFields[field.custom_field_id] || ''}
-                    />
-                  )}
-                  {field.type === "url" && (
-                    <input
-                      type={field.display_name_singular.toLowerCase() === "email" ? "email" : "url"}
-                      id={`customField-${field.custom_field_id}`}
-                      className="form-control"
-                      placeholder={`Enter ${field.display_name_singular}`}
-                      onChange={(e) => handleCustomFieldChange(field.custom_field_id, e.target.value)}
-                      // value={taskToEdit?taskToEdit.custom_fields[field.display_name_singular].value:null}
-                      value={customFields[field.custom_field_id] || ''}
-                    />
-                  )}
-                  {field.type === "choice" && (
-                    <Dropdown
-                    options={dropdownOptions[field.display_name_singular]} // Use the fetched options here
-                    onSelect={handlecustomSelect}
-                    label={`Select ${field.display_name_singular}`}
-                    option_label={`Choose ${field.display_name_singular}`}
-                    name_colum="option"
-                    id_column="lookup_id"
-                    id={field.custom_field_id}
-                    // preselectedId ={taskToEdit?taskToEdit.custom_fields[field.display_name_singular].lookupId:false}
-                    preselectedId={customFields[field.custom_field_id] || null}
-                    required = {requiredFields.includes(field.display_name_singular)}
-                  />
-                  )}
-                  {field.type === "date" && (
-                    <input
-                      type="date"
-                      id={`customField-${field.custom_field_id}`}
-                      className="form-control"
-                      onChange={(e) => handleCustomFieldChange(field.custom_field_id, e.target.value)}
-                      value={customFields[field.custom_field_id] || ''}
-                    />
-                  )}
+              <div className="row mt-4" id="all-task-details">
+                  {columns.map((column, columnIndex) => (
+                    <div key={columnIndex} className={`col-md-${12/columnCount}`}>
+                      {column.map((field) => (
+                        <div className="mb-3" key={field.custom_field_id}>
+                        {field.type != "choice"?<label htmlFor={`customField-${field.custom_field_id}`} className="form-label">
+                          {field.display_name_singular}
+                        </label>:null}
+                        
+                        {field.type === "text" && (
+                          <Text
+                            id={`customField-${field.custom_field_id}`}
+                            placeholder={`Enter ${field.display_name_singular}`}
+                            onChange={(e) => handleCustomFieldChange(field.custom_field_id, e.target.value)}
+                            value={customFields[field.custom_field_id] || ''}
+                          />
+                        )}
+                        
+                        {field.type === "number" && (
+                          <input
+                            type="number"
+                            id={`customField-${field.custom_field_id}`}
+                            className="form-control"
+                            placeholder={`Enter ${field.display_name_singular}`}
+                            onChange={(e) => handleCustomFieldChange(field.custom_field_id, e.target.value)}
+                            onWheel={(e) => e.target.blur()} // Prevent number input from scrolling
+                            value={customFields[field.custom_field_id] || ''}
+                          />
+                        )}
+
+                        {field.type === "url" && (
+                            <div className="d-flex align-items-center">
+                              {field.custom_field_id === 2 && customFields[field.custom_field_id] && (
+                                (() => {
+                                  const trimmedWebsite = customFields[field.custom_field_id]
+                                    .replace(/https?:\/\//, '')
+                                    .replace(/\/$/, '');
+                                  return (
+                                    <img
+                                      src={`https://img.logo.dev/${trimmedWebsite}?token=pk_CVR_tKaFQ0mBXPEs9bO4Pw&size=40`}
+                                      alt={`${trimmedWebsite} Logo`}
+                                      className="rounded me-2"
+                                      style={{ width: 40, height: 40, objectFit: "cover" }}
+                                    />
+                                  );
+                                })()
+                              )}
+                              <input
+                                type={field.display_name_singular.toLowerCase() === "email" ? "email" : "url"}
+                                id={`customField-${field.custom_field_id}`}
+                                className="form-control"
+                                placeholder={`Enter ${field.display_name_singular}`}
+                                onChange={(e) => handleCustomFieldChange(field.custom_field_id, e.target.value)}
+                                value={customFields[field.custom_field_id] || ''}
+                              />
+                            </div>
+                          )
+                        }
+
+                        {field.type === "choice" && (
+                          <Dropdown
+                          options={dropdownOptions[field.display_name_singular]} // Use the fetched options here
+                          onSelect={handlecustomSelect}
+                          label={`Select ${field.display_name_singular}`}
+                          option_label={`Choose ${field.display_name_singular}`}
+                          name_colum="option"
+                          id_column="lookup_id"
+                          id={field.custom_field_id}
+                          // preselectedId ={taskToEdit?taskToEdit.custom_fields[field.display_name_singular].lookupId:false}
+                          preselectedId={customFields[field.custom_field_id] || null}
+                          required = {requiredFields.includes(field.display_name_singular)}
+                        />
+                        )}
+                        {field.type === "date" && (
+                          <input
+                            type="date"
+                            id={`customField-${field.custom_field_id}`}
+                            className="form-control"
+                            onChange={(e) => handleCustomFieldChange(field.custom_field_id, e.target.value)}
+                            value={customFields[field.custom_field_id] || ''}
+                          />
+                        )}
+                      </div>
+                      ))}
+                    </div>
+                  ))}
                 </div>
-              ))}
-
-
 
               <button type="submit" className="btn btn-primary">
-              {taskToEdit ? "Update" : "Submit"}
+                {taskToEdit ? "Update" : "Submit"}
               </button>
             </form>
           </div>

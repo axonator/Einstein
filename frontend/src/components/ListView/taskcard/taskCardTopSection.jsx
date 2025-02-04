@@ -9,6 +9,17 @@ function TaskCardTopSection({ task }) {
   const [maxHeight, setMaxHeight] = useState("100px");
   const contentRef = useRef(null);
 
+  // Group custom fields for rendering in 3 columns, excluding specific keys
+  const excludedKeys = ['country', 'state', 'city', 'profile picture','health'];
+  const filteredCustomFields = Object.entries(task.custom_fields || {}).filter(
+    ([key]) => !excludedKeys.includes(key.toLowerCase())
+  );
+
+  const columnCount = 2;
+  const columns = Array.from({ length: columnCount }, (_, index) =>
+    filteredCustomFields.filter((_, i) => i % columnCount === index)
+  );
+
   const toggleExpand = () => {
     setIsExpanded((prev) => !prev);
   };
@@ -30,6 +41,19 @@ function TaskCardTopSection({ task }) {
           {/* <ActionBtns/> */}
           <CustomFiledData task={task} />
         </div>
+      </div>
+
+      {/* Details Grid */}
+      <div className="row mt-4" id="all-task-details">
+        {columns.map((column, columnIndex) => (
+          <div key={columnIndex} className="col-md-6">
+            {column.map(([key, value]) => (
+              <p key={key} className="m-2">
+                <strong>{key}:</strong> {value.value || "N/A"}
+              </p>
+            ))}
+          </div>
+        ))}
       </div>
 
       {/* Task Data Section */}

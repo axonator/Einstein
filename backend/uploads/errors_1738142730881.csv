@@ -1,0 +1,10 @@
+email,first_name,last_name,phone,company,reason
+Subhranil,Last Name,subhranil.roy@vinspirer.com,Cold,V Inspirer,India,Carterpuri,Haryana,Facilities Management & Commercial Cleaning,,,,31,Error: helpers.findContactByEmail is not a function
+Paul,Roy,paul.thomas@4armsfacilities.com,Cold,4Arms Facilities Pvt,India,,,Facilities Management & Commercial Cleaning,,,,7,Error: helpers.findContactByEmail is not a function
+Suhasini,Thomas,suhasini@fidelituscorp.com,Cold,Fidelitus,India,Viveknagar,Karnataka,Facilities Management & Commercial Cleaning,,,,469,Error: helpers.findContactByEmail is not a function
+Dattatraya,Deshpande,dattatraya.gayakwad@otis.com,Cold,OTIS,United States,Farmington,Maharashtra,Industrial Machinery & Equipment,,91 22 6679 5264,,71,000.00,Error: helpers.findContactByEmail is not a function
+Rakesh,Gayakwad,rakesh.kapoor@pre-serve.in,Cold,Preserve Team,India,,,Facilities Management & Commercial Cleaning,,91 124 406 8855,,28,Error: helpers.findContactByEmail is not a function
+Mohit,Kapoor,ms@friendizz.in,Cold,Friendizz,India,Hadpsar I.E.,Maharashtra,Facilities Management & Commercial Cleaning,,,,4,Error: helpers.findContactByEmail is not a function
+Prashanth,Suryawanshi,prashanth.bajaj@lindstromgroup.com,Cold,Lindstr??m Group,Finland,Helsinki,Karnataka,Facilities Management & Commercial Cleaning,,91 98109 64352,,4,700.00,Error: helpers.findContactByEmail is not a function
+Manish,Bajaj,manish.mamtani@compass-group.com,Cold,Compass Group India Support Services Pvt,India,Gurgaon South City Ii,Haryana,Facilities Management & Commercial Cleaning,,,,1,561.00,Error: helpers.findContactByEmail is not a function
+Anish,Mamtani,anish.sarkar@pluxeegroup.com,Cold,Sodexo,France,Issy-les-Moulineaux,Maharashtra,Food Service,,91 98201 29911,,3,15,147.00,Error: helpers.findContactByEmail is not a function

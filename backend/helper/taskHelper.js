@@ -3,22 +3,9 @@ const db = initDatabase();
 
 const helper = require('./helpers');
 
-async function getCombinedTaskDetails(task_id, identifier) {
-  const [taskDetails] = await getTaskDetails(task_id, identifier, "all");
-  const customFields = await getTaskCustomDetails(task_id);
-
-  // Transform CustomFields into the desired format
-  const customFieldsFormatted = {};
-  customFields.forEach(field => {
-    customFieldsFormatted[field.display_name_singular] = {
-      plural: field.display_name_plural,
-      value: field.value,
-      type: field.type,
-      custom_field_id: field.custom_field_id,
-      lookupId: field.lookup_id,
-    };
-  });
-
+async function getCombinedTaskDetails(task_id, identifier,parent_id="all",page_size=10,page_number=1) {
+  const [taskDetails] = await getTaskDetails(task_id, identifier, parent_id, page_size=10, page_number=1);
+  const customFieldsFormatted = await getTaskCustomDetails(task_id);
   return { taskDetails, customFields: customFieldsFormatted };
 }
 
@@ -62,13 +49,25 @@ async function getTaskCustomDetails(task_id) {
 
   try {
     const [result] = await db.execute(query);
-    return result;
+    // Transform CustomFields into the desired format
+    const customFieldsFormatted = {};
+    result.forEach(field => {
+      customFieldsFormatted[field.display_name_singular] = {
+        plural: field.display_name_plural,
+        value: field.value,
+        type: field.type,
+        custom_field_id: field.custom_field_id,
+        lookupId: field.lookup_id,
+      };
+    });
+    return customFieldsFormatted;
   } catch (err) {
     throw new Error(`Error fetching custom fields for task id ${task_id}: ${err}`);
   }
 }
 
-async function getTaskDetails(task_id, identifier, parent_id) {
+async function getTaskDetails(task_id, identifier, parent_id,page_size=10,page_number=1) {
+  const offset = (page_number - 1) * page_size;
   const query = `
     SELECT 
         task.task_id, 
@@ -94,13 +93,37 @@ async function getTaskDetails(task_id, identifier, parent_id) {
     LEFT JOIN 
         task_type AS parent_task_type ON parent_task.fk_task_type_id = parent_task_type.task_type_id 
     WHERE 
-        task.${identifier} = ${task_id} ${parent_id == "all" ? "" : `AND task.parent_task_id = ${parent_id}`};`;
+        task.${identifier} = ${task_id} 
+        ${parent_id == "all" ? "" : `AND task.parent_task_id = ${parent_id}`} 
+        LIMIT ${page_size} OFFSET ${offset};`;
 
   try {
     const [result] = await db.execute(query);
     return result;
   } catch (err) {
     throw new Error(`Error fetching tasks for task_type_id: ${err}`);
+  }
+}
+
+async function countTotal(task_id, identifier, parent_id) {
+  // Count total records
+  const countQuery = `
+  SELECT COUNT(*) AS total
+  FROM task
+  WHERE task.${identifier} = ? 
+  ${parent_id !== "all" ? "AND task.parent_task_id = ?" : ""};`;
+
+  
+  try {
+    // Calculate total (Avoid fetching all rows)
+    const countParams = parent_id !== "all" ? [task_id, parent_id] : [task_id];
+    const [countResult] = await db.execute(countQuery, countParams);
+    
+    // Extract total count
+    const total = countResult[0]?.total || 0;
+    return total;
+  } catch (err) {
+    throw new Error(`Error total count: ${err}`);
   }
 }
 
@@ -205,6 +228,7 @@ module.exports = {
   get_task_type_id,
   get_task_type_name,
   getTaskDetails,
+  countTotal,
   addNewTask,
   getCombinedTaskDetails,
   get_all_availble_customFields_for_taskType,

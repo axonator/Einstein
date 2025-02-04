@@ -33,13 +33,23 @@ const SingleView = () => {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      await Promise.all([fetchtabs(), getTaskDetails()]);
+      await getTaskDetails();
       setIsLoading(false);
     };
     fetchData();
   }, [taskId, taskTypeCode]);
 
+  useEffect(()=>{
+    const fetchData = async () => {
+      setIsLoading(true);
+      Object.keys(taskDetails).length ? await fetchtabs():null
+      setIsLoading(false);
+    };
+    fetchData();
+  },[taskDetails])
+
   async function getTaskDetails() {
+    
     try {
       const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/tasks/${taskId}`, {
         method: 'POST',
@@ -52,7 +62,7 @@ const SingleView = () => {
       if (!response.ok) {
         throw new Error(`Failed to fetch tasks: ${response.status}`);
       }
-
+      
       const data = await response.json();
       const customFields = data.customFields;
       const defaultFields = data.taskDetails;
@@ -89,6 +99,7 @@ const SingleView = () => {
         label: plural_name,
         content: (
           <Listview
+            taskDetails = {taskDetails}
             taskTypeCode={taskTypeCode}
             filtertasktype={plural_name}
             parenntId={taskId}
@@ -126,7 +137,7 @@ const SingleView = () => {
     </div>
   ) : (
     <div className="singleView" id="singleView">
-      {taskDetails.parent_task_type_id==10 ? null : <Detailed_View taskDetails={taskDetails} customfields={CustomDetails} refreshDetailedView={getTaskDetails} />}
+      {taskDetails.task_type_id==10 ? null : <Detailed_View taskDetails={taskDetails} customfields={CustomDetails} refreshDetailedView={getTaskDetails} />}
       <AiDocument />
       <Tabs tabs={tabsData} />
     </div>
