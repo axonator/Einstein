@@ -16,6 +16,9 @@ async function uploadFileToS3(fileBuffer, fileName, s3UploadPrefix, contentType)
         ContentType: contentType, // Change as per file type
       };
 
+      console.log("parammmmmmmmmmmmms",params);
+      
+
     try {
         const command = new PutObjectCommand(params);
         const data = await s3Client.send(command);

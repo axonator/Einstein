@@ -18,7 +18,7 @@ const upload = multer({ storage: storage });
   // API route to upload an image
   router.post("/uploadToS3", upload.single("file"), async (req, res) => {
     try {
-        console.log("alooooooooooooooooooo",req.file);
+        console.log("requestttttttttttt",req.file);
         
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
