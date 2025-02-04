@@ -25,8 +25,27 @@ app.use('/api/common',commonRoutes);
 const server = awsServerlessExpress.createServer(app);
 // Lambda handler
 exports.handler = (event, context) => {
+  // Ensure API Gateway doesn't use cached responses
+  context.callbackWaitsForEmptyEventLoop = false;
+
+  // Handle OPTIONS preflight request
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
+      body: JSON.stringify({ message: "CORS preflight success" }),
+    };
+  }
+
+  // Proceed with normal API request handling
   return awsServerlessExpress.proxy(server, event, context);
 };
+
+
 
 
 // Start LOCAL server
