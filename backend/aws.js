@@ -8,6 +8,8 @@ const s3Client = new S3Client({
  });
 
 async function uploadFileToS3(fileBuffer, fileName, s3UploadPrefix, contentType) {
+    console.log("s3client",s3Client);
+    
     const params = {
         Bucket: process.env.S3_BUCKET_NAME,
         Key: `${s3UploadPrefix}${fileName}`,
