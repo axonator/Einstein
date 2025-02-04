@@ -1,11 +1,14 @@
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 // Configure the S3 Client with your region
-const s3Client = new S3Client({ 
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+const s3Client = new S3Client({
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
     region: process.env.AWS_REGION,
- });
+  });
+  
 
 async function uploadFileToS3(fileBuffer, fileName, s3UploadPrefix, contentType) {
     console.log("s3client",s3Client);
