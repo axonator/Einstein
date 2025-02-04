@@ -3,6 +3,14 @@ const multer = require("multer");
 const router = express.Router();
 const AWS = require("../aws")
 
+// Middleware to set CORS headers for this route
+router.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    next();
+  });
+
 // Multer setup for handling file uploads
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
