@@ -48,30 +48,58 @@ function EditLogoModal({ task, show, onClose }) {
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-  
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("s3UploadPrefix","Media/ProfilePicture/")
-  
+
+    const s3UploadPrefix = "Media/ProfilePicture/";
+
+    // Convert file to Base64
+    const toBase64 = (file) => 
+        new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.split(",")[1]); // Get only Base64 data
+            reader.onerror = (error) => reject(error);
+        });
+
     try {
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/common/uploadToS3`, {
-        method: "POST",
-        body: formData,
-      });
-  
-      const data = await response.json();
-      if (data.success) {
-        const profileurl = data.fileUrl;
-        setisUploadimgDisable(false)
-        setCustomSrc(profileurl); // Update UI with uploaded image URL
-        changeField(currentSrc,profileurl,23);
-      } else {
-        console.error("Upload failed:", data.error);
-      }
+        const base64File = await toBase64(file);
+
+        // Create JSON payload
+        const payload = {
+            s3UploadPrefix,
+            file: {
+                filename: file.name,
+                contentType: file.type,
+                content: base64File, // Base64 file content
+            },
+        };
+
+        // const response = await fetch("https://vfysgbhq4l6azn677dz3oz56yy0nukwi.lambda-url.ap-south-1.on.aws/", {
+        //     method: "POST",
+        //     headers: { "Content-Type": "application/json" },
+        //     body: JSON.stringify(payload),
+        // });
+        // Make POST request using Axios
+        console.log("calling lambda");
+        
+        const response = await axios.post("https://vfysgbhq4l6azn677dz3oz56yy0nukwi.lambda-url.ap-south-1.on.aws/", payload, {
+          headers: { "Content-Type": "application/json" },
+        });
+
+        console.log("calllingggg");
+        
+        if (response.data.success) {
+            const profileUrl = response.data.fileUrl;
+            setisUploadimgDisable(false);
+            setCustomSrc(profileUrl); // Update UI with uploaded image URL
+            changeField(currentSrc, profileUrl, 23);
+        } else {
+            console.error("Upload failed:", data.error);
+        }
     } catch (error) {
-      console.error("Error uploading image:", error);
+        console.error("Error uploading image:", error);
     }
-  };
+};
+
 
   const handelNewProfileUrl = (event) => {
     const newurl = event.target.value;
@@ -92,7 +120,7 @@ function EditLogoModal({ task, show, onClose }) {
     if (Object.keys(updateCustomFields).length > 0) {
       for (const key in updateCustomFields) { 
         try {
-          await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/tasks/updateTaskCustomFields/${task.task_id}`, { newId:updateCustomFields[key] ,customFieldId:key});
+          await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/updateTaskCustomFields/${task.task_id}`, { newId:updateCustomFields[key] ,customFieldId:key});
         } catch (error) {
           console.error("Error updating custom fields:", error);
         }
@@ -103,7 +131,7 @@ function EditLogoModal({ task, show, onClose }) {
     if (Object.keys(newcustomFields).length > 0) {
       try {
         newcustomFields["newTaskId"]=task.task_id
-        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/tasks/addTaskCustomFields`, {
+        const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/addTaskCustomFields`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
