@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "start": "vite",
-    "build": "cross-env VITE_LOCAL_URL=$VITE_SERVER_URL vite build",
+    "build": "cross-env VITE_LOCAL_URL=VITE_SERVER_URL vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

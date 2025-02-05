@@ -98,37 +98,6 @@ const db = initDatabase();
       throw new Error(`Error updating data in ${tableName}: ${err.message}`);
     }
   }
-
-  async function uploadFileToS3(imageFileName, S3_UPLOAD_PREFIX) {
-    // Read the file data
-    const imageFileData = fs.createReadStream(imageFileName);
-
-    // Initialize the S3 client with credentials
-    const s3 = new AWS.S3({
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-        region: process.env.AWS_REGION,
-    });
-
-    const bucketName = process.env.S3_BUCKET_NAME;
-    const uploadParams = {
-        Bucket: bucketName,
-        Key: `${S3_UPLOAD_PREFIX}${imageFileName}`,
-        Body: imageFileData,
-    };
-
-    return new Promise((resolve, reject) => {
-        // Upload the file
-        s3.upload(uploadParams, (err, data) => {
-            if (err) {
-                console.error(`Failed to upload file to S3: ${err.message}`);
-                return reject(null);
-            }
-            const fileUrl = `https://${bucketName}.s3.amazonaws.com/${S3_UPLOAD_PREFIX}${imageFileName}`;
-            resolve(fileUrl);
-        });
-    });
-}
   
 
 module.exports = {
@@ -137,6 +106,5 @@ module.exports = {
   deleterow,
   getLatestCounter,
   updateTableData,
-  uploadFileToS3,
   addNewRow
 };
