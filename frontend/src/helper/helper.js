@@ -16,7 +16,7 @@ function isCustomFieldAvailable(filedname,customfields) {
 async function getcustomFields(task_type_id,setError,setLoading) {
     
     try {
-        const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/getCustomFields`, {
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/tasks/getCustomFields`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

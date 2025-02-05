@@ -20,7 +20,7 @@ function Signal({ initalColor, health, task, fetchTasks }) {
 
     try {
       // Make an API call to update the database
-      await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/updateTaskCustomFields/${taskId}`, { newId: healthId, customFieldId: 8 });
+      await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/tasks/updateTaskCustomFields/${taskId}`, { newId: healthId, customFieldId: 8 });
       
       setActiveLightColor(color); // Update the UI only on success
 

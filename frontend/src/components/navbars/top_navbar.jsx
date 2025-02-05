@@ -8,7 +8,7 @@ const Navbar = () => {
 
   const handleSearch = async (query) => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_LOCAL_URL}/api/search?q=${query}`);
+      const response = await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/search?q=${query}`);
       setResults(response.data);
     } catch (error) {
       console.error('Search error:', error);

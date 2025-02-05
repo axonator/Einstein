@@ -6,7 +6,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js'; // Import Bootstrap JS (with
 
 
 const Contact = () => {
-  const serverUrl = import.meta.env.VITE_LOCAL_URL;
+  const serverUrl = import.meta.env.VITE_SERVER_URL;
   const [contacts, setContacts] = useState([]);
   const [filters, setFilters] = useState({ country_id: [], industry_id: [], email: '' });
   // const [showForm, setShowForm] = useState(false);

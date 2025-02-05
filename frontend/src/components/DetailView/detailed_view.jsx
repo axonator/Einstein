@@ -63,7 +63,7 @@ const columns = Array.from({ length: columnCount }, (_, index) =>
 
     async function fetchLinkedinData(linkedinUrl) {
       try {
-        const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/linkedin/`, {
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/linkedin/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
