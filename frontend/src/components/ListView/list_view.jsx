@@ -207,7 +207,7 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
                     <option value="desc">Descending</option>
                   </select>
 
-                  <select className="form-select w-auto ms-2" value={appliedFilter} onChange={handelfilter}>
+                  {/* <select className="form-select w-auto ms-2" value={appliedFilter} onChange={handelfilter}>
                     {filterList.map((item, index) => (
                       <option key={index} value={item.display_name_singular} id={item.custom_field_id}>
                         {item.display_name_singular}
@@ -215,14 +215,14 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
                     ))}
                   </select>
                   {appliedFilter != 'Filters' &&
-                    <select className="form-select w-auto ms-2" value={appliedFilter} onChange={handelfilter}>
-                      {dropdownOptions[appliedFilter].map((item, index) => (
-                        <option key={index} value={item.option} id={item.lookup_id}>
-                          {item.option}
-                        </option>
-                      ))}
-                    </select>
-                  }
+                  <select className="form-select w-auto ms-2" value={appliedFilter} onChange={handelfilter}>
+                    {dropdownOptions[appliedFilter].map((item, index) => (
+                      <option key={index} value={item.option} id={item.lookup_id}>
+                        {item.option}
+                      </option>
+                    ))}
+                  </select>
+                  } */}
                 </div>
 
                 <div className="d-flex align-items-center">

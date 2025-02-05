@@ -155,7 +155,7 @@ useEffect(() => {
   useEffect(() => {
     availableCustomFields.forEach((field) => {
       if (field.type === "choice") {
-        fetchcustomdropdownlist('lookup', "*", "WHERE fk_custom_field_id=" + field.custom_field_id,field.display_name_singular);
+        fetchcustomdropdownlist('lookup', "*", "WHERE fk_custom_field_id=" + field.custom_field_id, field.display_name_singular);
       }
     });
   }, [availableCustomFields]);
