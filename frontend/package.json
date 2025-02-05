@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "start": "vite",
-    "build": "vite build",
+    "build": "cross-env VITE_LOCAL_URL=https://u66vyxtx4m.execute-api.ap-south-1.amazonaws.com/prod vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
