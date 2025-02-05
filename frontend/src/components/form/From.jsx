@@ -29,7 +29,7 @@ function FormComponent({ toggleModal,refreshTasks,parent_task_id,selectedTabId, 
   // Fetch function
   const fetchdropdownlist = async (table_name, column_name="*",condition='') => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/tasks/get_list`, {
+      const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/get_list`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -63,7 +63,7 @@ function FormComponent({ toggleModal,refreshTasks,parent_task_id,selectedTabId, 
 
   const fetchcustomdropdownlist = async (table_name, column_name="*",condition='',listName) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/tasks/get_list`, {
+      const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/get_list`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -182,7 +182,7 @@ useEffect(() => {
   
     if (addNewlookup['values'].length > 0) {
       try {
-        const response = await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/tasks/addNewRows`, addNewlookup);
+        const response = await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/addNewRows`, addNewlookup);
         // Replace `customFields` values with corresponding IDs
         const responseMapping = response.data;
         Object.entries(customFields).forEach(([key, value]) => {
@@ -197,7 +197,7 @@ useEffect(() => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/tasks/add_task`, {
+      const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/add_task`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -215,7 +215,7 @@ useEffect(() => {
         try {
           customFields["newTaskId"]=newTaskId
           
-          const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/tasks/addTaskCustomFields`, {
+          const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/addTaskCustomFields`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -257,12 +257,12 @@ useEffect(() => {
     
     try {
       // Make an API call to update the task Fiedls
-      await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/tasks/updateTaskFields/${taskToEdit.task_id}`, {formData });
+      await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/updateTaskFields/${taskToEdit.task_id}`, {formData });
       
       if(Object.keys(customFields).length>0){
         for (const key in customFields) {
           if (! insertNewCustomFields.includes(key)) {
-            await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/tasks/updateTaskCustomFields/${taskToEdit.task_id}`, { newId:customFields[key] ,customFieldId:key});
+            await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/updateTaskCustomFields/${taskToEdit.task_id}`, { newId:customFields[key] ,customFieldId:key});
             delete customFields[key]
           }
         }
@@ -270,7 +270,7 @@ useEffect(() => {
         if (Object.keys(customFields).length>0) {
           try {
             customFields["newTaskId"]=taskToEdit.task_id
-            const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/tasks/addTaskCustomFields`, {
+            const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/addTaskCustomFields`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

@@ -6,7 +6,7 @@ function DeletePopup({ task, fetchTasks, onclose }) {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${import.meta.env.VITE_SERVER_URL}/api/tasks/${task.task_id}`, {
+      await axios.delete(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/${task.task_id}`, {
         data: { deleteChildren }, // Send the deleteChildren state to the backend
       });
       fetchTasks(); // Refresh the tasks after deletion
