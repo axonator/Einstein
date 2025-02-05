@@ -27,8 +27,6 @@ exports.handler = (event, context) => {
   return awsServerlessExpress.proxy(server, event, context);
 };
 
-console.log("yoooooo",process.env.NODE_ENV);
-
 // Start LOCAL server only in development mode
 if (process.env.NODE_ENV !== 'production') {
   const PORT = 5000;
