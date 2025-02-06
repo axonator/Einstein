@@ -176,29 +176,29 @@ async function get_task_type_id(display_name_singular) {
 }
 
 async function addNewTask(fields) {
-  const task_type_id = fields.task_type_id;
-  const status_id = fields.statusId;
-  const task_data = fields.taskData;
-  const display_name = fields.name;
-  const currentorderNumber = fields.counter;
-  const parentId = fields.parent_task_id;
-  const nextordernumber = currentorderNumber + 1000;
-
-  const query = `INSERT INTO task (display_name, task_data, fk_task_type_id, fk_status_id, order_number, parent_task_id) VALUES ("${display_name}", "${task_data}", ${task_type_id}, ${status_id}, ${nextordernumber}, ${parentId});`;
+  const { task_type_id, statusId, taskData, name, counter, parent_task_id } = fields;
+  const nextOrderNumber = counter + 1000;
   
-  // update counter
-  const columnValues = { latest_counter: nextordernumber };
+  const query = `INSERT INTO task 
+    (display_name, task_data, fk_task_type_id, fk_status_id, order_number, parent_task_id) 
+    VALUES (?, ?, ?, ?, ?, ?)`;
+
+  const values = [name, taskData, task_type_id, statusId, nextOrderNumber, parent_task_id || null];
+
+  // Update counter
+  const columnValues = { latest_counter: nextOrderNumber };
   const condition = { counter_name: 'tasks' };
   const counter_table_name = 'counter';
 
   try {
-    const [result] = await db.execute(query);
+    const [result] = await db.execute(query, values);
     await helper.updateTableData(counter_table_name, columnValues, condition);
     return result;
   } catch (err) {
-    throw new Error(`Error adding new task ${fields}: ${err}`);
+    throw new Error(`Error adding new task: ${JSON.stringify(fields)} - ${err.message}`);
   }
 }
+
 
 async function addNewTaskCustomFields(fields, newTaskId) {
   const isChoiceList = [1, 3, 4, 5, 8, 9, 10];

@@ -87,7 +87,7 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
   };
 
   // Fetch function to call the API
-  const fetchTasks = async () => {
+  const fetchTasks = async (ORDER=false,PAGE_NUMBER=currentPage) => {
     setLoading(true);
     setError('');
 
@@ -104,7 +104,7 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
             FilteredCFTValue : selectedFilterName,
             selected_tab_id : selectedTabId,
             page_size : pageSize,
-            page_number : currentPage
+            page_number : PAGE_NUMBER
           }),
       });
 
@@ -128,7 +128,11 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
       
       ascsetTasks(ascfilteredTasks); // Update the tasks state with the response data
       setdescTasks(descfilteredTasks);
-      sortOrder == 'asc'?setTasks(ascfilteredTasks):setTasks(descfilteredTasks);
+      if(ORDER){
+        ORDER == 'asc'?setTasks(ascfilteredTasks):setTasks(descfilteredTasks);
+      }else{
+        sortOrder == 'asc'?setTasks(ascfilteredTasks):setTasks(descfilteredTasks);
+      } 
       
     } catch (error) {
       setError(error.message); // Update error state in case of failure

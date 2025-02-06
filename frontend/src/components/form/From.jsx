@@ -233,9 +233,9 @@ useEffect(() => {
     
           const result = await response.json();
           // Refresh the task list after adding a new task
-          setSortOrder('desc');
-          setCurrentPage(totalPages);
-          // refreshTasks();
+          // setSortOrder('desc');
+          // setCurrentPage(totalPages);
+          refreshTasks('desc',totalPages);
           toggleModal();
         } catch (error) {
           console.error("Error adding custom fields:", error);
@@ -244,9 +244,9 @@ useEffect(() => {
         
       }else{
         // Refresh the task list after adding a new task
-        setSortOrder('desc');
-        setCurrentPage(totalPages);
-        // refreshTasks();
+        // setSortOrder('desc');
+        // setCurrentPage(totalPages);
+        refreshTasks('desc',totalPages);
         toggleModal();
       }
     } catch (error) {
