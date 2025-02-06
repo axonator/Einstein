@@ -73,20 +73,10 @@ function EditLogoModal({ task, show, onClose }) {
             },
         };
 
-        // const response = await fetch("https://vfysgbhq4l6azn677dz3oz56yy0nukwi.lambda-url.ap-south-1.on.aws/", {
-        //     method: "POST",
-        //     headers: { "Content-Type": "application/json" },
-        //     body: JSON.stringify(payload),
-        // });
-        // Make POST request using Axios
-        console.log("calling lambda");
-        
         const response = await axios.post("https://vfysgbhq4l6azn677dz3oz56yy0nukwi.lambda-url.ap-south-1.on.aws/", payload, {
           headers: { "Content-Type": "application/json" },
         });
 
-        console.log("calllingggg");
-        
         if (response.data.success) {
             const profileUrl = response.data.fileUrl;
             setisUploadimgDisable(false);

@@ -170,16 +170,20 @@ useEffect(() => {
       "values": [],
       "onlyValues":[]
     };
-  
+
     Object.entries(customFields).forEach(([key, value]) => {
+      
       if (typeof value === "string") {
-        let newValue = [key, value];
-        addNewlookup['values'].push(newValue);
-        addNewlookup['onlyValues'].push(value);
+        if (value.includes('other404')) {
+          const updatedValue = value.replace('other404','')
+          let newValue = [key, updatedValue];
+          addNewlookup['values'].push(newValue);
+          addNewlookup['onlyValues'].push(updatedValue);
+        }
 
       }
     });
-  
+    
     if (addNewlookup['values'].length > 0) {
       try {
         const response = await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/addNewRows`, addNewlookup);

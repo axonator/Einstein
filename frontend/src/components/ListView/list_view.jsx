@@ -3,7 +3,7 @@ import TaskCard from './taskcard/taskCard';
 import FormComponent from '../form/From';
 import { getcustomFields } from '../../helper/helper';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
- 
+import Dropdown from '../form/Dropdown';
 
 const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTabId,selectedTabname}) => {
   const [tasks, setTasks] = useState([]);
@@ -20,8 +20,12 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
   const [totalTasks, settotalTasks] = useState(0);
   const [totalPages, setTotalPages] = useState(0)
   const [filterList,setfilterList] = useState([]);
-  const [appliedFilter, setappliedFilter] = useState("Filters");
+  const [appliedFilterName, setappliedFilterName] = useState("Filters");
+  const [appliedFilterCFId, setappliedFilterCFId] = useState(false);
   const [dropdownOptions, setDropdownOptions] = useState({});
+  const [selectedFilterName, setselectedFilterName] = useState("Options");
+  const [selectedFilterId, setselectedFilterId] = useState(false);
+
 
 
   useEffect(()=>{
@@ -35,7 +39,7 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
 
   useEffect(() => {
     fetchTasks();
-  }, [pageSize, currentPage]); // Ensure it refetches on size/page change
+  }, [pageSize, currentPage,selectedFilterName]); // Ensure it refetches on size/page change
 
   // Fetch tasks when taskTypeCode is set
   useEffect(() => {
@@ -43,7 +47,6 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
       fetchTasks();
     }
   }, [taskTypeCode, parenntId]); // Trigger on either variable change
-  
   
   useEffect(() => {
     setCurrentPage(1);
@@ -97,7 +100,8 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
         body: JSON.stringify(
           { taskTypeCode : taskTypeCode,
             parent_task_id : parenntId,
-            parent_ttype_id : taskDetails.task_type_id,
+            FilteredCFT : appliedFilterName,
+            FilteredCFTValue : selectedFilterName,
             selected_tab_id : selectedTabId,
             page_size : pageSize,
             page_number : currentPage
@@ -142,16 +146,19 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
     setCurrentPage(parseInt(e.target.value, 10));
   };
 
-  const handelfilter = async (e) => {
-    const display_name_singular = e.target.value;
-    const cf_id = e.target.options[e.target.selectedIndex].id;
-    await setappliedFilter(display_name_singular);
-    await fetchcustomdropdownlist('lookup', "*", "WHERE fk_custom_field_id=" + cf_id, display_name_singular);
+  const handelfilter = async (id,custom_field_id,e) => {
+    const display_name_singular = e.target.options[e.target.selectedIndex].value
+    setappliedFilterName(display_name_singular);
+    setappliedFilterCFId(custom_field_id)
+    fetchcustomdropdownlist('lookup', "*", "WHERE fk_custom_field_id=" + custom_field_id, display_name_singular);
   };
 
-  // useEffect(()=>[
-
-  // ])
+  const handelDropDownoptions = async (id,selectedValue) => {
+    setselectedFilterName(selectedValue);
+    setselectedFilterId(selectedValue)
+    setPageSize(totalTasks)
+    setCurrentPage(1)
+  };
 
   // Handle modal toggle
   const toggleModal = () => {
@@ -170,8 +177,6 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
     }
   };
 
-  // console.log(dropdownOptions);
-  
   return loading ? 
     (
     <div className='container d-flex justify-content-center'>
@@ -207,22 +212,7 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
                     <option value="desc">Descending</option>
                   </select>
 
-                  {/* <select className="form-select w-auto ms-2" value={appliedFilter} onChange={handelfilter}>
-                    {filterList.map((item, index) => (
-                      <option key={index} value={item.display_name_singular} id={item.custom_field_id}>
-                        {item.display_name_singular}
-                      </option>
-                    ))}
-                  </select>
-                  {appliedFilter != 'Filters' &&
-                  <select className="form-select w-auto ms-2" value={appliedFilter} onChange={handelfilter}>
-                    {dropdownOptions[appliedFilter].map((item, index) => (
-                      <option key={index} value={item.option} id={item.lookup_id}>
-                        {item.option}
-                      </option>
-                    ))}
-                  </select>
-                  } */}
+                  
                 </div>
 
                 <div className="d-flex align-items-center">
@@ -241,11 +231,39 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
                     <option value={totalTasks}>All</option>
                   </select>
                 </div>
+
+                <div className="d-flex align-items-center">
+                    <Dropdown
+                      options={filterList}
+                      onSelect={handelfilter}
+                      option_label="Filters"
+                      name_colum="display_name_singular"
+                      preselectedId = {appliedFilterCFId}
+                      id_column="custom_field_id"
+                      id="Filter"
+                      CLASSNAME = "ms-2"
+                    />
+                    {appliedFilterName != 'Filters' &&
+                      <div>
+                        <Dropdown
+                          options={dropdownOptions[appliedFilterName]}
+                          onSelect={handelDropDownoptions}
+                          option_label={`Select ${appliedFilterName}`}
+                          name_colum="option"
+                          preselectedId = {selectedFilterId}
+                          id_column="option"
+                          id="dropdownOptions"
+                          CLASSNAME = "ms-2"
+                        />
+
+                      </div>
+                    }
+                </div>
               </div>
             }
 
             {/* Pagination controls */}
-            {totalPages > 0 &&
+            {totalPages > 1 &&
               <div className="d-flex justify-content-end align-items-center">
                 <button
                   className="btn btn-outline-primary m-2"
@@ -288,8 +306,7 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
           </div>
 
           {/* Pagination controls */}
-          {totalPages == 1 ? 
-            null:
+          {totalPages > 1 && 
             <div className="d-flex justify-content-end align-items-center">
               <button
                 className="btn btn-outline-primary m-2"

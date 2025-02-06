@@ -140,7 +140,8 @@ const taskHelper = require('../helper/taskHelper');
     const { 
       taskTypeCode,
       parent_task_id,
-      parent_ttype_id,
+      FilteredCFT,
+      FilteredCFTValue,
       selected_tab_id,
       page_size,
       page_number } = req.body;
@@ -152,14 +153,19 @@ const taskHelper = require('../helper/taskHelper');
 
       let alltasks = await taskHelper.getTaskDetails(selected_tab_id, identifier, ParentId, page_size, page_number);
       let total = await taskHelper.countTotal(selected_tab_id,identifier,ParentId);
+
       for (const task of alltasks) {
         // Fetch and format custom fields
-        const customFieldsFormatted = await taskHelper.getTaskCustomDetails(task.task_id, 'task_id');
-
-        // Attach custom fields to the task
-        task.custom_fields = customFieldsFormatted;
+        task.custom_fields = await taskHelper.getTaskCustomDetails(task.task_id, 'task_id');
       }
-
+      // Apply filtering logic if FilteredCFT is not 'Filters'
+      if (FilteredCFT !== 'Filters') {
+          alltasks = alltasks.filter(task => 
+              task.custom_fields &&
+              task.custom_fields.hasOwnProperty(FilteredCFT) &&
+              task.custom_fields[FilteredCFT]['value'] === FilteredCFTValue
+          );
+      }
       // Return all tasks with custom fields
       res.json({alltasks : alltasks, total : total});
     } catch (err) {

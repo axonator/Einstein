@@ -146,43 +146,45 @@ const columns = Array.from({ length: columnCount }, (_, index) =>
             <span className="badge bg-light text-dark me-2">Tags</span>
             <span className="badge bg-light text-dark">Tags</span>
           </div>
-          <div>
-            <button className="btn btn-outline-primary mt-4" onClick={()=>fetchLinkedinData(taskDetails.custom_fields['Contact Linkedin'].value)}>Fetch Linkedin Data</button>
-            {linkedinData && (
-              <div className="mt-4 p-3 border rounded bg-light">
-                <h5>Fetched LinkedIn Data</h5>
-                <a href={taskDetails.custom_fields['Contact Linkedin'].value}>
-                  <img
-                    src={linkedinData.profile_image_url}
-                    className="rounded-circle"
-                    style={{
-                      width: "80px",
-                      height: "80px",
-                      cursor: "pointer",
-                      objectFit: "contain",
-                    }}
-                  />
-                </a>
-                <div className="row mt-3">
-                  {Object.entries(linkedinData)
-                    .filter(([key]) => !excludeLinkedin.includes(key)) // Exclude fields & check value existence
-                    .map(([key, value], index) => (
-                      value?
-                      <div key={index} className={typeof value === "string" && value.length > 50 ? "col-md-12 mb-2" : "col-md-6 mb-2"} >
-                        <strong>{key.replace(/_/g, " ")}:</strong>{" "}
-                        {typeof value === "string" && value.includes("https") ? (
-                          <a href={value} target="_blank" rel="noopener noreferrer">{value}</a>
-                        ) : (
-                          value
-                        )}
-                      </div>
-                      :null
-                    ))}
+          {taskDetails.custom_fields['Contact Linkedin'] ?
+            <div>
+              <button className="btn btn-outline-primary mt-4" onClick={()=>fetchLinkedinData(taskDetails.custom_fields['Contact Linkedin'].value)}>Fetch Linkedin Data</button>
+              {linkedinData && (
+                <div className="mt-4 p-3 border rounded bg-light">
+                  <h5>Fetched LinkedIn Data</h5>
+                  <a href={taskDetails.custom_fields['Contact Linkedin'].value}>
+                    <img
+                      src={linkedinData.profile_image_url}
+                      className="rounded-circle"
+                      style={{
+                        width: "80px",
+                        height: "80px",
+                        cursor: "pointer",
+                        objectFit: "contain",
+                      }}
+                    />
+                  </a>
+                  <div className="row mt-3">
+                    {Object.entries(linkedinData)
+                      .filter(([key]) => !excludeLinkedin.includes(key)) // Exclude fields & check value existence
+                      .map(([key, value], index) => (
+                        value?
+                        <div key={index} className={typeof value === "string" && value.length > 50 ? "col-md-12 mb-2" : "col-md-6 mb-2"} >
+                          <strong>{key.replace(/_/g, " ")}:</strong>{" "}
+                          {typeof value === "string" && value.includes("https") ? (
+                            <a href={value} target="_blank" rel="noopener noreferrer">{value}</a>
+                          ) : (
+                            value
+                          )}
+                        </div>
+                        :null
+                      ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-          </div>
+            </div>
+            :null}
         </div>
       </div>
 
