@@ -82,7 +82,6 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
       }));
     } catch (error) {
       console.error(error);
-      alert(`Error fetching ${table_name} list`);
     }
   };
 

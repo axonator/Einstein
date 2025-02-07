@@ -201,27 +201,33 @@ async function addNewTask(fields) {
 
 
 async function addNewTaskCustomFields(fields, newTaskId) {
-  const isChoiceList = [1, 3, 4, 5, 8, 9, 10];
-  const queries = [];
-  let initialQuery = `INSERT INTO custom_field__task (fk_custom_field_id, fk_task_id, value, ischoice) VALUES`;
-
-  // Construct queries for each custom field
-  for (const [fk_custom_field_id, value] of Object.entries(fields)) {
-    const isChoice = isChoiceList.includes(Number(fk_custom_field_id)) ? 1 : 0;
-    const query = `(${fk_custom_field_id}, ${newTaskId}, '${value}', ${isChoice})`;
-    queries.push(query);
-  }
-
-  // Combine all queries into a single valid SQL statement
-  const finalQuery = `${initialQuery} ${queries.join(", ")};`;
-
   try {
-    const [result] = await db.execute(finalQuery);
+    if (Object.keys(fields).length === 0) {
+      return { message: "No custom fields to insert" };
+    }
+    const getChoiceIdsQuery = "SELECT custom_field_id FROM custom_field WHERE type = 'choice';";
+    const [choiceIds] = await db.execute(getChoiceIdsQuery);
+    const isChoiceList = choiceIds.map(item => item.custom_field_id);
+  
+  
+    const queries = [];
+    const values = [];
+  
+    // Construct queries for each custom field
+    for (const [fk_custom_field_id, value] of Object.entries(fields)) {
+      const isChoice = isChoiceList.includes(Number(fk_custom_field_id)) ? 1 : 0;
+      queries.push("(?, ?, ?, ?)");
+      values.push(fk_custom_field_id, newTaskId, value, isChoice);
+    }
+  
+    const finalQuery = `INSERT INTO custom_field__task (fk_custom_field_id, fk_task_id, value, ischoice) VALUES ${queries.join(", ")};`;
+    const [result] = await db.execute(finalQuery, values);
     return result;
   } catch (err) {
-    throw new Error(`Error adding custom fields: ${err}`);
+    throw new Error(`Error adding custom fields: ${err.message}`);
   }
 }
+
 
 module.exports = {
   get_allowed_type_ids,

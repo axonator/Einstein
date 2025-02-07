@@ -57,7 +57,6 @@ function FormComponent({ toggleModal,refreshTasks,parent_task_id,selectedTabId, 
       }
     } catch (error) {
       console.error(error);
-      alert(`Error fetching ${table_name} list`);
     }
   };
 
@@ -82,14 +81,14 @@ function FormComponent({ toggleModal,refreshTasks,parent_task_id,selectedTabId, 
           "fk_custom_field_id":404,
           "option":"Other"
         }
-        requestedList.push(other)
+        taskToEdit ? null : requestedList.push(other)
+        
       }
       setDropdownOptions((prevalue)=>({
         ...prevalue,[listName]:requestedList
       }));
     } catch (error) {
       console.error(error);
-      alert(`Error fetching ${table_name} list`);
     }
   };
 
@@ -176,6 +175,7 @@ useEffect(() => {
       if (typeof value === "string") {
         if (value.includes('other404')) {
           const updatedValue = value.replace('other404','')
+          customFields[key] = updatedValue;
           let newValue = [key, updatedValue];
           addNewlookup['values'].push(newValue);
           addNewlookup['onlyValues'].push(updatedValue);
@@ -239,7 +239,6 @@ useEffect(() => {
           toggleModal();
         } catch (error) {
           console.error("Error adding custom fields:", error);
-          alert(`Failed to add custom feilds: ${response.status}`);
         }
         
       }else{
@@ -251,7 +250,6 @@ useEffect(() => {
       }
     } catch (error) {
       console.error("Error adding task:", error);
-      alert(`Failed to add task: ${error}`);
     }
   };
 
@@ -289,7 +287,6 @@ useEffect(() => {
             const result = await response.json();
           } catch (error) {
             console.error("Error adding custom fields:", error);
-            alert(`Failed to add custom feilds: ${response.status}`);
           }
         } 
       }
@@ -297,7 +294,6 @@ useEffect(() => {
       toggleModal();
     } catch (error) {
       console.error("Failed to update task custom fields:", error);
-      alert("Failed to update the task custom fields. Please try again.");
     }
   };
 

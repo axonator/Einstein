@@ -28,7 +28,6 @@ function Signal({ initalColor, health, task, fetchTasks }) {
       fetchTasks();  // This will re-render the Listview component
     } catch (error) {
       console.error("Failed to update task health:", error);
-      alert("Failed to update the signal. Please try again.");
     }
   };
 

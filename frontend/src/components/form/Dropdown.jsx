@@ -64,7 +64,7 @@ function Dropdown({
         </label>
       }
       <select
-        id={label}
+        id={label ? label:undefined}
         className="form-select"
         value={selectedOption || ""}
         onChange={handleChange}
