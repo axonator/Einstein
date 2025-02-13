@@ -15,6 +15,7 @@ function TaskCardTopSection({ task,fetchTasks }) {
   const [AvailableTags, setAvailableTags] = useState([]);
   const [newTagName,setnewTagName]= useState("")
 
+  
   const HandleNewTag = (event) => {
     const { name, value } = event.target;
     setnewTagName(value);

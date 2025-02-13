@@ -154,8 +154,7 @@ const taskHelper = require('../helper/taskHelper');
     try {
       const identifier = 'fk_task_type_id';
       let alltasks = await taskHelper.getTaskDetails(selected_tab_id, identifier, ParentId, page_size, page_number, tags);
-      let total = await taskHelper.countTotal(selected_tab_id,identifier,ParentId);
-      
+      let total = await taskHelper.countTotal(selected_tab_id,identifier,ParentId);      
       for (const task of alltasks) {
         // Fetch and format custom fields
         task.custom_fields = await taskHelper.getTaskCustomDetails(task.task_id, 'task_id');
