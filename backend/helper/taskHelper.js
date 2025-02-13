@@ -66,10 +66,18 @@ async function getTaskCustomDetails(task_id) {
   }
 }
 
-async function getTaskDetails(task_id, identifier, parent_id,page_size=10,page_number=1) {
+async function getTaskDetails(task_id, identifier, parent_id,page_size=10,page_number=1, tagIds = []) {
+
+  // Extract tag_id values from tagIds array
+  const tagIdValues = tagIds.map(tag => tag.tag_id);
+
   const offset = (page_number - 1) * page_size;
+  // Check if we need to join task__tag table
+  const tagJoin = tagIdValues.length > 0 ? "INNER JOIN task__tag ON task.task_id = task__tag.fk_task_id" : "";
+  const tagFilter = tagIdValues.length > 0 ? `AND task__tag.fk_tag_id IN (${tagIdValues.join(",")})` : "";
+
   const query = `
-    SELECT 
+    SELECT DISTINCT
         task.task_id, 
         task.display_name AS task_name, 
         task.task_data, 
@@ -92,9 +100,11 @@ async function getTaskDetails(task_id, identifier, parent_id,page_size=10,page_n
         task AS parent_task ON task.parent_task_id = parent_task.task_id 
     LEFT JOIN 
         task_type AS parent_task_type ON parent_task.fk_task_type_id = parent_task_type.task_type_id 
+    ${tagJoin}
     WHERE 
         task.${identifier} = ${task_id} 
-        ${parent_id == "all" ? "" : `AND task.parent_task_id = ${parent_id}`} 
+        ${parent_id == "all" ? "" : `AND task.parent_task_id = ${parent_id}`}
+        ${tagFilter} 
         LIMIT ${page_size} OFFSET ${offset};`;
 
   try {

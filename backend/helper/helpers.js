@@ -3,6 +3,7 @@ const db = initDatabase();
 
   async function addNewRow(table_name, column_names, values, VALUES) {
     const query = `INSERT IGNORE INTO ${table_name} ${column_names} VALUES ${values};`;
+    
     try {
       const [result] = await db.execute(query);
 
@@ -31,6 +32,16 @@ const db = initDatabase();
       throw new Error(`Error fetching ${column_name} from ${table_name}: ${err.message}`);
     }
   }
+
+  async function getTasktags(taskId) {
+    const query = `SELECT tag_id,display_name FROM task__tag LEFT JOIN tag ON fk_tag_id = tag_id WHERE fk_task_id = ?;`;
+    try {
+      const [rows] = await db.execute(query,[taskId]);
+      return rows;
+    } catch (err) {
+      throw new Error(`Error fetching ${column_name} from ${table_name}: ${err.message}`);
+    }
+  }
   
   async function getIdsByNames(tableName, names) {
     const query = `SELECT id, name FROM ${tableName} WHERE name IN (?);`;
@@ -45,19 +56,41 @@ const db = initDatabase();
     }
   }
   
-  async function deleterow(id, table_name, column_name) {
-    const query = `DELETE FROM ${table_name} WHERE ${column_name} = ?;`;
-    try {
-      const [result] = await db.execute(query, [id]);
-      if (result.affectedRows > 0) {
-        return { message: `Row with ID ${id} successfully deleted.` };
-      } else {
-        throw new Error(`No row found with ID ${id}`);
-      }
-    } catch (err) {
-      throw new Error(`Error deleting row with ID ${id}: ${err.message}`);
+  // async function deleterow(id, table_name, column_name) {
+  //   const query = `DELETE FROM ${table_name} WHERE ${column_name} = ?;`;
+  //   try {
+  //     const [result] = await db.execute(query, [id]);
+  //     if (result.affectedRows > 0) {
+  //       return { message: `Row with ID ${id} successfully deleted.` };
+  //     } else {
+  //       throw new Error(`No row found with ID ${id}`);
+  //     }
+  //   } catch (err) {
+  //     throw new Error(`Error deleting row with ID ${id}: ${err.message}`);
+  //   }
+  // }
+
+  async function deleterow(table_name, col_names, col_values) {
+    if (col_names.length !== col_values.length) {
+        throw new Error("Column names and values must have the same length.");
     }
-  }
+
+    const conditions = col_names.map(col => `${col} = ?`).join(" AND ");
+    const query = `DELETE FROM ${table_name} WHERE ${conditions};`;
+
+    try {
+        const [result] = await db.execute(query, col_values);
+        if (result.affectedRows > 0) {
+            return { message: `Rows successfully deleted with conditions: ${conditions}` };
+        } else {
+            throw new Error(`No rows found matching the given conditions`);
+        }
+    } catch (err) {
+        throw new Error(`Error deleting rows: ${err.message}`);
+    }
+}
+
+
 
   async function getLatestCounter(counterName) {
     // SQL query to fetch the latest counter based on counterName
@@ -102,6 +135,7 @@ const db = initDatabase();
 
 module.exports = {
   get_names,
+  getTasktags,
   getIdsByNames,
   deleterow,
   getLatestCounter,

@@ -7,6 +7,8 @@ const taskHelper = require('../helper/taskHelper');
     try {
       
       const { table_name, columns, values,onlyValues } = req.body;
+      console.log("request body",req.body);
+      
 
       // Validate the request body
       if (!table_name || !Array.isArray(columns) || !Array.isArray(values)) {
@@ -144,16 +146,16 @@ const taskHelper = require('../helper/taskHelper');
       FilteredCFTValue,
       selected_tab_id,
       page_size,
-      page_number } = req.body;
+      page_number,
+      tags } = req.body;
     
     ParentId = taskTypeCode == "all" ? taskTypeCode : parent_task_id;
     
     try {
       const identifier = 'fk_task_type_id';
-
-      let alltasks = await taskHelper.getTaskDetails(selected_tab_id, identifier, ParentId, page_size, page_number);
+      let alltasks = await taskHelper.getTaskDetails(selected_tab_id, identifier, ParentId, page_size, page_number, tags);
       let total = await taskHelper.countTotal(selected_tab_id,identifier,ParentId);
-
+      
       for (const task of alltasks) {
         // Fetch and format custom fields
         task.custom_fields = await taskHelper.getTaskCustomDetails(task.task_id, 'task_id');
@@ -186,17 +188,17 @@ const taskHelper = require('../helper/taskHelper');
 
       // Delete child tasks if the checkbox is checked
       if (deleteChildren) {
-        await helper.deleterow(id, 'task', 'parent_task_id');
+        await helper.deleterow(table_name, ['parent_task_id'],[id]);
 
       } else {
         const columnValues = { parent_task_id: 404 };
         const condition = { parent_task_id: id};
 
-        await helper.updateTableData('task', columnValues, condition)
+        await helper.updateTableData(table_name, columnValues, condition)
       }
 
       // Delete the task
-      const result = await helper.deleterow(id, table_name, column_name);
+      const result = await helper.deleterow(table_name, [column_name],[id]);
       
       res.json(result);
     } catch (err) {

@@ -8,11 +8,16 @@ import FormComponent from "../form/From";
 import { getcustomFields } from "../../helper/helper";
 import { MdEditNote } from "react-icons/md";
 import { MdOutlineExpandMore } from "react-icons/md";
+import Signal from "../ListView/taskcard/Signal";
+import { getAppliedTags, getAvailableTags,removeTag, applyNewTag, addNewTag } from "../../helper/helper";
+import Text from "../form/text";
+
 
 const Detailed_View = ({ taskDetails, customfields,refreshDetailedView }) => {
   taskDetails.custom_fields = customfields;  
   const [showDeletePopup, setShowModal] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showAddNewTag, setShowAddNewTag] = useState(false);
   const [availableCustomFields,setavailableCustomFields] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,6 +25,43 @@ const Detailed_View = ({ taskDetails, customfields,refreshDetailedView }) => {
   const [maxHeight, setMaxHeight] = useState("100px");
   const [linkedinData, setLinkedinData] = useState(null);
   const contentRef = useRef(null);
+  const [appliedTags, setappliedTags] = useState([]);
+  const [AvailableTags, setAvailableTags] = useState([]);
+  const [signal, setSignal] = useState(null);
+  const [Health, sethealth] = useState(null);
+  const [newTagName,setnewTagName]= useState("")
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      const applied = await getAppliedTags(taskDetails.task_id);
+      const available = await getAvailableTags();
+      // Filter out tags that are already applied
+      const filteredAvailableTags = available.filter(
+        (tag) => !applied.some((appliedTag) => appliedTag.tag_id === tag.tag_id)
+      );
+      setappliedTags(applied);
+      setAvailableTags(filteredAvailableTags);
+    };
+  
+    fetchTags();
+  }, [taskDetails, customfields]);
+
+  useEffect(() => {
+    if (taskDetails.task_type_id === 1 || customfields['Health']) {
+      const healthValue = customfields.Health?.value;
+      sethealth(customfields.Health);
+
+      if (healthValue?.toLowerCase() || null) {
+        if (healthValue.toLowerCase() === "warning") {
+          setSignal("yellow");
+        } else if (healthValue.toLowerCase() === "danger") {
+          setSignal("red");
+        } else {
+          setSignal("green");
+        }
+      }
+    }
+  }, [taskDetails, customfields]); // Re-run effect when task or customFields change
 
  // Group custom fields for rendering in 3 columns, excluding specific keys
 const excludedKeys = ['health', 'profile picture', 'company website'];
@@ -45,7 +87,6 @@ const columns = Array.from({ length: columnCount }, (_, index) =>
     }
   }, [isExpanded]);
 
-  
   let trimmedWebsite =''
     try {
         const website = customfields['Company Website'].value;
@@ -86,12 +127,39 @@ const columns = Array.from({ length: columnCount }, (_, index) =>
   const toggleModal = () => {
     setShowForm(!showForm);
   };
+
+  const handleTagChange = (event) => {
+    const { name, value } = event.target;
+    setnewTagName(value);
+  };
+
+  const handleApplyNewTag = async(tagId) => {
+    await applyNewTag(tagId, taskDetails.task_id)
+    refreshDetailedView()
+  };
+
+  const handleRemoveTag = async(tagId) => {
+    await removeTag(tagId,taskDetails.task_id)
+    refreshDetailedView()
+  };
+
+  const handelNewTag = async (event) => {
+    event.preventDefault(); // Prevent the default form submission
+    const newTagId = await addNewTag(newTagName)
+    handleApplyNewTag(newTagId)
+    setShowAddNewTag(!showAddNewTag)
+  };
   
   return (
     <div className="container pt-4 DetailedView">
       {/* Error message */}
       {error && <div className="alert alert-danger">{error}</div>}
       {/* Header Section */}
+        {/* {signal && (
+          <div >
+            <Signal initalColor={signal} health={Health} task={taskDetails} fetchTasks={refreshDetailedView} />
+          </div>
+        )} */}
       <div className="row align-items-center">
         {trimmedWebsite &&
           <div className="col-md-1">
@@ -99,12 +167,15 @@ const columns = Array.from({ length: columnCount }, (_, index) =>
           </div>
         }
         <div className="col-md ps-3">
-          <h4 className="m-0"><a className="text-decoration-none" href={isCustomFieldAvailable("Company Website",customfields)} target="_blank">{taskDetails.task_name}</a> </h4>
+          <h4 className="m-0">
+            <a className="text-decoration-none" href={isCustomFieldAvailable("Company Website",customfields)} target="_blank">{taskDetails.task_name}</a> 
+          </h4>
           <small className="text-muted">{taskDetails.parent_task_name == "Root" ? "" : taskDetails.parent_task_name}</small>
         </div>
         <div className="col-md text-end">
-          {Object.keys(customfields)==0?null:<span className={`badge bg-${customfields["Health"].value.toLowerCase()} me-2`}>{customfields['Health'].value}</span>}
-          <span className="badge bg-primary">{taskDetails.status}</span>
+          <span className="badge bg-primary">
+            {taskDetails.status}
+          </span>
           <div className="mt-2">
             <span>X%</span>
             <button className="btn btn-link p-0 ms-3 text-danger" onClick={()=>setShowModal(true)}>
@@ -141,11 +212,50 @@ const columns = Array.from({ length: columnCount }, (_, index) =>
               </div>
             )}
           </div>
-          <div className="d-flex flex-wrap">
-            <span className="badge bg-light text-dark me-2">Tags</span>
-            <span className="badge bg-light text-dark me-2">Tags</span>
-            <span className="badge bg-light text-dark">Tags</span>
-          </div>
+          
+            <div className="d-flex align-items-center flex-wrap gap-3">
+              {/* Available Tags Dropdown */}
+              <div className="btn-group">
+                <button className="btn btn-secondary btn-sm" type="button" onClick={()=>setShowAddNewTag(!showAddNewTag)}>
+                  New Tag
+                </button>
+                {AvailableTags && AvailableTags.length > 0 && (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split"
+                      data-bs-toggle="dropdown"
+                      aria-haspopup="true"
+                      aria-expanded="false"
+                    ></button>
+                    <ul className="dropdown-menu">
+                      {AvailableTags.map((tag) => (
+                        <li key={tag.tag_id} id={tag.tag_id} onClick={()=>handleApplyNewTag(tag.tag_id, taskDetails.task_id)}>
+                          <a className="dropdown-item">{tag.display_name}</a>
+                        </li>
+                      ))}
+                    </ul>
+                  </>)}
+              </div>
+              {/* Applied Tags */}
+              {appliedTags && appliedTags.length > 0 && (
+                <div className="d-flex flex-wrap align-items-center">
+                {appliedTags.map((tag) => (
+                  <span key={tag.tag_id} className="badge badge-pill badge-primary me-2 d-flex align-items-center">
+                    {tag.display_name}
+                    <button
+                      type="button"
+                      className="btn-close ms-2"
+                      onClick={() => handleRemoveTag(tag.tag_id)}
+                      aria-label="Close"
+                    ></button>
+                  </span>
+                ))}
+              </div>
+              )}
+            </div>
+
+
           {taskDetails.custom_fields['Contact Linkedin'] ?
             <div>
               <button className="btn btn-outline-primary mt-4" onClick={()=>fetchLinkedinData(taskDetails.custom_fields['Contact Linkedin'].value)}>Fetch Linkedin Data</button>
@@ -219,6 +329,35 @@ const columns = Array.from({ length: columnCount }, (_, index) =>
         selectedTabName={taskDetails.task_type} 
         availableCustomFields={availableCustomFields} 
         taskToEdit={taskDetails}/>)}
+
+        {showAddNewTag && (
+        
+        <div className="modal d-block bg-light bg-opacity-50">
+        <div className="modal-dialog modal-sm">
+          <div className="modal-content">
+            <div className="modal-body">
+              <form onSubmit={handelNewTag}>
+                <div className="mb-3">
+                  <label htmlFor="name" className="form-label">
+                    Add New Tag
+                  </label>
+                  <Text name="name" id="name" placeholder="Enter New Tag Name" onChange={handleTagChange} value={newTagName} required={true}/>
+                </div>
+  
+                <button type="submit" className="btn btn-primary">
+                  Add
+                </button>
+                <button 
+                  className="ms-2 btn btn-outline-secondary" 
+                  onClick={()=>setShowAddNewTag(!showAddNewTag)}>
+                  Cancel
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+        )}
 
     </div>
 

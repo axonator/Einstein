@@ -2,7 +2,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import './App.css'; // Ensure this file exists and is correctly configured
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import SingleView from './components/SingleView.jsx';
 import Contact from './components/Contact.jsx';
 import Top_Navbar from './components/navbars/top_navbar.jsx'

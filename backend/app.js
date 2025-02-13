@@ -7,6 +7,8 @@ const bodyParser = require('body-parser');
 const tasksRoutes = require('./routes/tasks');
 const contactRoutes = require('./routes/contacts');
 const linkedinRoutes = require('./routes/linkedin')
+const commonRoutes = require('./routes/common')
+
 const app = express();
 
 // Middleware
@@ -19,13 +21,8 @@ app.use(bodyParser.json());
 app.use('/api/tasks', tasksRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/linkedin',linkedinRoutes);
+app.use('/api/common',commonRoutes);
 
-// Create the server
-const server = awsServerlessExpress.createServer(app);
-// Lambda handler
-exports.handler = (event, context) => {
-  return awsServerlessExpress.proxy(server, event, context);
-};
 
 // Start LOCAL server only in development mode
 if (process.env.NODE_ENV !== 'production') {
@@ -33,5 +30,12 @@ if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
+}else{
+  // Create the server
+  const server = awsServerlessExpress.createServer(app);
+  exports.handler = (event, context) => {
+    return awsServerlessExpress.proxy(server, event, context);
+  };
+  
 }
 

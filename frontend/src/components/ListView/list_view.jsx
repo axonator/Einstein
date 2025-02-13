@@ -4,6 +4,7 @@ import FormComponent from '../form/From';
 import { getcustomFields } from '../../helper/helper';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Dropdown from '../form/Dropdown';
+import { getAvailableTags } from '../../helper/helper';
 
 const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTabId,selectedTabname}) => {
   const [tasks, setTasks] = useState([]);
@@ -25,7 +26,28 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
   const [dropdownOptions, setDropdownOptions] = useState({});
   const [selectedFilterName, setselectedFilterName] = useState("Options");
   const [selectedFilterId, setselectedFilterId] = useState(false);
+  const [appliedTagsFilter, setappliedTagsFilter] = useState([]);
+  const [AvailableTags, setAvailableTags] = useState([]);
 
+  useEffect(() => {
+    const fetchTags = async () => {
+      const available = await getAvailableTags();
+      const filteredAvailableTags = available.filter(
+        (tag) => !appliedTagsFilter.some((appliedTag) => appliedTag.tag_id === tag.tag_id)
+      );
+      setAvailableTags(filteredAvailableTags);
+    };
+  
+    fetchTags();
+  }, [taskDetails,appliedTagsFilter]);
+
+  function handleApplyNewTag(tagId, tagName) {
+    setappliedTagsFilter([...appliedTagsFilter,{tag_id:tagId,display_name:tagName }]);
+  }
+
+  function handleRemoveTag(tagId) {
+    setappliedTagsFilter(appliedTagsFilter.filter(tag=>tag.tag_id !== tagId))
+  }
 
 
   useEffect(()=>{
@@ -39,14 +61,8 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
 
   useEffect(() => {
     fetchTasks();
-  }, [pageSize, currentPage,selectedFilterName]); // Ensure it refetches on size/page change
+  }, [pageSize, currentPage,selectedFilterName,appliedTagsFilter,taskTypeCode, parenntId,selectedTabId]);
 
-  // Fetch tasks when taskTypeCode is set
-  useEffect(() => {
-    if (taskTypeCode) {
-      fetchTasks();
-    }
-  }, [taskTypeCode, parenntId]); // Trigger on either variable change
   
   useEffect(() => {
     setCurrentPage(1);
@@ -58,9 +74,8 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
       )
       setfilterList(newFilterList)
     }
-    availableCustomFields();
-    fetchTasks()
-    
+    availableCustomFields();  
+
   }, [selectedTabId]);
 
   const fetchcustomdropdownlist = async (table_name, column_name="*",condition='',listName) => {
@@ -103,7 +118,8 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
             FilteredCFTValue : selectedFilterName,
             selected_tab_id : selectedTabId,
             page_size : pageSize,
-            page_number : PAGE_NUMBER
+            page_number : PAGE_NUMBER,
+            tags : appliedTagsFilter
           }),
       });
 
@@ -296,6 +312,37 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
             }
               
           </div>
+
+          <div className="d-flex align-items-center flex-wrap gap-3">
+              {/* Available Tags Dropdown */}
+              <div className="dropdown">
+                <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Tags
+                </button>
+                {AvailableTags && AvailableTags.length > 0 && (
+                  <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    {AvailableTags.map((tag) => (
+                        <a className="dropdown-item" key={tag.tag_id} id={tag.tag_id} onClick={()=>handleApplyNewTag(tag.tag_id, tag.display_name)}>{tag.display_name}</a>
+                    ))}
+                  </div>)}
+              </div>
+              {/* Applied Tags */}
+              {appliedTagsFilter && appliedTagsFilter.length > 0 && (
+                <div className="d-flex flex-wrap align-items-center">
+                {appliedTagsFilter.map((tag) => (
+                  <span key={tag.tag_id} className="badge badge-pill badge-primary me-2 d-flex align-items-center">
+                    {tag.display_name}
+                    <button
+                      type="button"
+                      className="btn-close ms-2"
+                      onClick={() => handleRemoveTag(tag.tag_id)}
+                      aria-label="Close"
+                    ></button>
+                  </span>
+                ))}
+              </div>
+              )}
+            </div>
 
           {/* Task list */}
           <div className="task-list">

@@ -32,7 +32,7 @@ function Signal({ initalColor, health, task, fetchTasks }) {
   };
 
   return (
-    <div className="col-1 border border-light" id="signalBox">
+    <div className="col-1 border border-light " id="signalBox">
       <div
         className={`signal-light red ${activeLightColor === "red" ? "glow" : ""}`}
         onClick={() => handleSignalClick("red")} // Change active color on click
