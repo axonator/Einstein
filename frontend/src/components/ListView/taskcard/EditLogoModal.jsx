@@ -34,7 +34,7 @@ function EditLogoModal({ task, show, onClose }) {
     if (companyUrl) {
       let trimmedWebsite =''
       try {
-          trimmedWebsite = companyUrl.replace(/https?:\/\//, '').replace(/\/$/, '');
+          trimmedWebsite = companyUrl.replace(/https?:\/\//, '').split('/')[0];
           let logoUlr = `https://img.logo.dev/${trimmedWebsite}?token=pk_CVR_tKaFQ0mBXPEs9bO4Pw&size=${size}`
           setfilteredCompanyUrl(logoUlr)
       } catch (error) {

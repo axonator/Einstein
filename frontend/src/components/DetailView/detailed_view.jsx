@@ -90,7 +90,7 @@ const columns = Array.from({ length: columnCount }, (_, index) =>
   let trimmedWebsite =''
     try {
         const website = customfields['Company Website'].value;
-        trimmedWebsite = website.replace(/https?:\/\//, '').replace(/\/$/, '');
+        trimmedWebsite = website.replace(/https?:\/\//, '').split('/')[0];
         
     } catch (error) {
         trimmedWebsite = ''

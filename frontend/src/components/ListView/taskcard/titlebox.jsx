@@ -6,8 +6,7 @@ function titlebox({subtitle,task}) {
     let trimmedWebsite = false;
     try {
         const website = task.custom_fields['Company Website'].value;
-        trimmedWebsite = website.replace(/https?:\/\//, '').replace(/\/$/, '');
-        
+        trimmedWebsite = website.replace(/https?:\/\//, '').split('/')[0];
     } catch (error) {
         trimmedWebsite = false
     }
