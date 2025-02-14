@@ -44,7 +44,7 @@ async function getAppliedTags(taskid) {
       const response = await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/common/taskTags/${taskid}`);
       return response.data
     } catch (error) {
-      console.error('Search error:', error);
+      console.error('getAppliedTags error:', error);
     }
   }
 
@@ -54,7 +54,7 @@ async function getAppliedTags(taskid) {
 
       return response.data
     } catch (error) {
-      console.error('Search error:', error);
+      console.error('getAvailableTags error:', error);
     }
   }
 
@@ -74,7 +74,7 @@ async function getAppliedTags(taskid) {
         const response = await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/common/addtaskTag/${taskid}`,{ tagId: TagId });
         return response.data;
     } catch (error) {
-        console.error('Add Tag error:', error);
+        console.error('Apply Tag error:', error);
     }
   }
 

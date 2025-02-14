@@ -40,7 +40,7 @@ function TaskCardTopSection({ task,fetchTasks }) {
       const applied = await getAppliedTags(task.task_id);
       const available = await getAvailableTags();
       // Filter out tags that are already applied
-      if (Object.keys(applied).length > 0) {
+      if (applied && Object.keys(applied).length > 0) {
         const FilterAvailable = available.filter(
           (tag) => !applied.some((appliedTag) => appliedTag.tag_id === tag.tag_id)
         );
