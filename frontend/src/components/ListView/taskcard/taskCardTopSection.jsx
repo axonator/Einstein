@@ -15,7 +15,7 @@ function TaskCardTopSection({ task,fetchTasks }) {
   const [AvailableTags, setAvailableTags] = useState([]);
   const [newTagName,setnewTagName]= useState("")
 
-  
+
   const HandleNewTag = (event) => {
     const { name, value } = event.target;
     setnewTagName(value);
@@ -40,11 +40,16 @@ function TaskCardTopSection({ task,fetchTasks }) {
       const applied = await getAppliedTags(task.task_id);
       const available = await getAvailableTags();
       // Filter out tags that are already applied
-      const filteredAvailableTags = available.filter(
-        (tag) => !applied.some((appliedTag) => appliedTag.tag_id === tag.tag_id)
-      );
+      if (Object.keys(applied).length > 0) {
+        const FilterAvailable = available.filter(
+          (tag) => !applied.some((appliedTag) => appliedTag.tag_id === tag.tag_id)
+        );
+        setAvailableTags(FilterAvailable);
+      }else{
+        setAvailableTags(available);
+      }
+      
       setappliedTags(applied);
-      setAvailableTags(filteredAvailableTags);
     };
   
     fetchTags();
