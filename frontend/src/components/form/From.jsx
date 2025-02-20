@@ -81,7 +81,7 @@ function FormComponent({ toggleModal,refreshTasks,parent_task_id,selectedTabId, 
         const other = {
           "lookup_id":404,
           "fk_custom_field_id":404,
-          "option":"Other"
+          "option":"Add +"
         }
         taskToEdit ? null : requestedList.push(other)
         
