@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const helpers = require('../helper/helpers');
 const contactHelpers = require('../helper/contactHelper')
+const taskHelper = require('../helper/taskHelper')
 const { parse, Parser } = require('json2csv');
 const multer = require('multer');
 const csv = require('csv-parser');
@@ -19,27 +20,38 @@ router.post('/get_table_data', async (req, res) => {
   }
 });
 
-// Get all contacts with optional filters
-router.get('/', async (req, res) => {
+  router.get('/', async (req, res) => {
     try {
-      // Execute the main query
-      const results = await contactHelpers.get_contacts(req)
-      res.json(results);
+      let allcontacts = await helpers.get_names('contact','*');
+      let columns = Object.keys(allcontacts[0]).filter(key=>key);
+      let total = await helpers.countTotal('contact');
+            
+      for (const contact of allcontacts) {
+        const {customFieldsFormatted,customFields} = await helpers.getCutsomDetails(contact.id, 'id','contact');
+        contact.custom_fields = customFieldsFormatted;
+        // Merge arrays and keep unique values
+        columns = [...new Set([...columns, ...customFields])];
+      }
+      // Return all contacts with custom fields
+      res.json({allcontacts : allcontacts, total : total, columns:columns});
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      console.error(err);
+      res.status(500).send(err);
     }
   });
 
 // Get a single contact by ID
-router.get('/:id', async (req, res) => {
+  router.get('/:id', async (req, res) => {
     try {
-        // Execute the main query
-        const results = await contactHelpers.get_contact_details(req)
-        res.json(results[0]);
+      const id = req.params.id;
+      console.log("alo",id);
+      const combinedData = await contactHelpers.getCombinedDetails(id,'id');
+      
+      // Send both arrays as JSON
+      res.json(combinedData);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: err });
     }
-    
   });
 
 //insert new contact
@@ -118,6 +130,9 @@ router.post('/import/csv', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
+    console.log("alo");
+    
+
     const filePath = req.file.path;
     const skippedRecords = [];
     const processedRecords = [];
@@ -130,6 +145,7 @@ router.post('/import/csv', upload.single('file'), async (req, res) => {
         fs.createReadStream(filePath)
           .pipe(csv())
           .on('data', async (row) => {
+            console.log("rowwwwwwwwwww",type);
             
             totalRecords++;
             try {

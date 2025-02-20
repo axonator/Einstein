@@ -5,7 +5,7 @@ const helper = require('./helpers');
 
 async function getCombinedTaskDetails(task_id, identifier,parent_id="all",page_size=10,page_number=1) {
   const [taskDetails] = await getTaskDetails(task_id, identifier, parent_id, page_size=10, page_number=1);
-  const customFieldsFormatted = await getTaskCustomDetails(task_id);
+  const {customFieldsFormatted,customFields} = await helper.getCutsomDetails(task_id);
   return { taskDetails, customFields: customFieldsFormatted };
 }
 
@@ -16,53 +16,6 @@ async function get_task_type_name(task_type_id) {
     return result;
   } catch (err) {
     throw new Error(`Error fetching task type name for id - ${task_type_id}: ${err}`);
-  }
-}
-
-async function getTaskCustomDetails(task_id) {
-  const query = `
-    SELECT 
-      t.task_id,
-      t.display_name AS task_name,
-      cf.custom_field_id,
-      cf.display_name_singular,
-      cf.display_name_plural,
-      CASE 
-          WHEN cft.ischoice = TRUE THEN l.option 
-          ELSE cft.value                         
-      END AS value,
-      cf.type AS type,
-      CASE 
-          WHEN cft.ischoice = TRUE THEN l.lookup_id
-          ELSE NULL
-      END AS lookup_id
-    FROM 
-      task t
-    JOIN 
-      custom_field__task cft ON t.task_id = cft.fk_task_id
-    JOIN 
-      custom_field cf ON cft.fk_custom_field_id = cf.custom_field_id
-    LEFT JOIN 
-      lookup l ON cft.ischoice = TRUE AND cft.value = l.lookup_id
-    WHERE 
-      t.task_id = ${task_id};`;
-
-  try {
-    const [result] = await db.execute(query);
-    // Transform CustomFields into the desired format
-    const customFieldsFormatted = {};
-    result.forEach(field => {
-      customFieldsFormatted[field.display_name_singular] = {
-        plural: field.display_name_plural,
-        value: field.value,
-        type: field.type,
-        custom_field_id: field.custom_field_id,
-        lookupId: field.lookup_id,
-      };
-    });
-    return customFieldsFormatted;
-  } catch (err) {
-    throw new Error(`Error fetching custom fields for task id ${task_id}: ${err}`);
   }
 }
 
@@ -210,7 +163,7 @@ async function addNewTask(fields) {
 }
 
 
-async function addNewTaskCustomFields(fields, newTaskId) {
+async function addNewTaskCustomFields(fields, newTaskId, table_name) {
   try {
     if (Object.keys(fields).length === 0) {
       return { message: "No custom fields to insert" };
@@ -230,7 +183,7 @@ async function addNewTaskCustomFields(fields, newTaskId) {
       values.push(fk_custom_field_id, newTaskId, value, isChoice);
     }
   
-    const finalQuery = `INSERT INTO custom_field__task (fk_custom_field_id, fk_task_id, value, ischoice) VALUES ${queries.join(", ")};`;
+    const finalQuery = `INSERT INTO custom_field__${table_name} (fk_custom_field_id, fk_${table_name}_id, value, ischoice) VALUES ${queries.join(", ")};`;
     const [result] = await db.execute(finalQuery, values);
     return result;
   } catch (err) {
@@ -248,6 +201,5 @@ module.exports = {
   addNewTask,
   getCombinedTaskDetails,
   get_all_availble_customFields_for_taskType,
-  addNewTaskCustomFields,
-  getTaskCustomDetails
+  addNewTaskCustomFields
 };

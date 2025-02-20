@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import {useLocation } from 'react-router-dom';
 import Detailed_View from './DetailView/detailed_view';
 import AiDocument from './AiDocument/AiDocument';
 import Tabs from './tabs/Tabs';

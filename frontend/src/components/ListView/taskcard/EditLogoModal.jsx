@@ -126,7 +126,7 @@ function EditLogoModal({ task, show, onClose }) {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(newcustomFields),
+          body: JSON.stringify({ customFields, table_name: "task" }),
         });
   
         if (!response.ok) {

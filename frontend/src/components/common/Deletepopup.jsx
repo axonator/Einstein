@@ -4,18 +4,41 @@ import axios from "axios";
 function DeletePopup({ task, fetchTasks, onclose }) {
   const [deleteChildren, setDeleteChildren] = useState(false); // State to track the checkbox
 
+  // const handleDelete = async () => {
+  //   try {
+  //     await axios.delete(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/${task.task_id}`, {
+  //       data: { deleteChildren : deleteChildren,
+  //               table_name : 'task', 
+  //               column_name : 'task_id' 
+  //             }, // Send the deleteChildren state to the backend
+  //     });
+  //     fetchTasks(); // Refresh the tasks after deletion
+  //   } catch (error) {
+  //     console.error("Error deleting task:", error);
+  //   }
+  //   onclose(false); // Close the modal after deleting
+  //   window.location.href = `/view?scope=${task.parent_task_type || task.parent_task_type==null ?"root":task.parent_task_type}&pid=${task.parent_task_id || task.parent_task_id == null ?1:task.parent_task_id}`; // Redirect
+  // };
+
   const handleDelete = async () => {
     try {
       await axios.delete(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/${task.task_id}`, {
-        data: { deleteChildren }, // Send the deleteChildren state to the backend
+        data: { 
+          deleteChildren: deleteChildren, 
+          table_name: 'task', 
+          column_name: 'task_id' 
+        }
       });
-      fetchTasks(); // Refresh the tasks after deletion
+  
+      await fetchTasks(); // Ensure tasks are refreshed only after deletion
+      onclose(false); // Close modal after deletion
+      window.location.href = `/view?scope=${task.parent_task_type || task.parent_task_type==null ?"root":task.parent_task_type}&pid=${task.parent_task_id || task.parent_task_id == null ?1:task.parent_task_id}`; // Redirect
+
     } catch (error) {
       console.error("Error deleting task:", error);
     }
-    onclose(false); // Close the modal after deleting
-    window.location.href = `/view?scope=${task.parent_task_type || task.parent_task_type==null ?"root":task.parent_task_type}&pid=${task.parent_task_id || task.parent_task_id == null ?1:task.parent_task_id}`; // Redirect
   };
+  
 
   return (
     <div

@@ -1,67 +1,32 @@
 // Form.jsx
 import Dropdown from "./Dropdown";
-import Textarea from "./Textarea";
+// import Textarea from "./Textarea";
 import Text from "./text";
 import { useState,useEffect } from "react";
+import Box from '@mui/material/Box';
+// import TextField from '@mui/material/TextField';
 import axios from "axios";
 
-function FormComponent({ toggleModal,refreshTasks,parent_task_id,selectedTabId, selectedTabName, availableCustomFields, taskToEdit, totalPages, setSortOrder, setCurrentPage}) {
+function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, availableCustomFields, taskToEdit}) {
   const [customFields, setCustomFields] = useState({});
   const [insertNewCustomFields,setnewcustomfields]= useState([]);;
   const [dropdownOptions, setDropdownOptions] = useState({});
   const [formData, setFormData] = useState({
-    "name":taskToEdit?taskToEdit.task_name:"",
-    "taskData" :taskToEdit?taskToEdit.task_data:"",
+    "first_name": taskToEdit?taskToEdit.first_name:"",
+    "last_name": taskToEdit?taskToEdit.last_name:"",
     "task_type_id":selectedTabId,
-    "statusId":taskToEdit?taskToEdit.status_id:"",
-    "parent_task_id":parent_task_id,
     "counter_name":"contacts",
-    "table_name":"task"
+    "table_name":"contact"
   })
 
   const requiredFields = ['Health','Status'];
   const excludeOtherOption = ['Status','Health','Lead Type'];
 
-  const [statuses, setStatuses] = useState([]); // For storing statuses list
   const columnCount = 3;
   const columns = Array.from({ length: columnCount }, (_, index) =>
     availableCustomFields.filter((_, i) => i % columnCount === index)
   );
   
-  // Fetch function
-  const fetchdropdownlist = async (table_name, column_name="*",condition='') => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/get_list`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ table_name: table_name, column_name: column_name,condition:condition }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${table_name}: ${response.status}`);
-      }
-
-      const requestedList = await response.json();
-
-      const stateUpdaters = {
-        status: setStatuses,
-      };
-
-      const updater = stateUpdaters[table_name.toLowerCase()];
-
-      if (updater) {
-        updater(requestedList);
-        
-      } else {
-        console.warn(`No state updater found for table_name: ${table_name}`);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const fetchcustomdropdownlist = async (table_name, column_name="*",condition='',listName) => {
     try {
       const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/get_list`, {
@@ -81,7 +46,7 @@ function FormComponent({ toggleModal,refreshTasks,parent_task_id,selectedTabId, 
         const other = {
           "lookup_id":404,
           "fk_custom_field_id":404,
-          "option":"Other"
+          "option":"Add +"
         }
         taskToEdit ? null : requestedList.push(other)
         
@@ -94,41 +59,31 @@ function FormComponent({ toggleModal,refreshTasks,parent_task_id,selectedTabId, 
     }
   };
 
-  useEffect(() => {
-    fetchdropdownlist("status");
-    handlestatusSelect()
-  },[]);
-
   // Update the `customFields` state when `taskToEdit` is available
-useEffect(() => {
-  if (taskToEdit && taskToEdit.custom_fields) {
-    
-    // Initialize customFields state based on taskToEdit
-    const newfields = []
-    const initialCustomFields = {};
-    availableCustomFields.forEach((field) => {
-      const fieldName = field.display_name_singular;
-      if(taskToEdit.custom_fields[fieldName]){
-        const type = field.type;
-        if (type == 'choice') {
-          initialCustomFields[field.custom_field_id] = taskToEdit.custom_fields[fieldName].lookupId || '';
-        }else{
-          initialCustomFields[field.custom_field_id] = taskToEdit.custom_fields[fieldName].value || '';
+    useEffect(() => {
+    if (taskToEdit && taskToEdit.custom_fields) {
+        
+        // Initialize customFields state based on taskToEdit
+        const newfields = []
+        const initialCustomFields = {};
+        availableCustomFields.forEach((field) => {
+        const fieldName = field.display_name_singular;
+        if(taskToEdit.custom_fields[fieldName]){
+            const type = field.type;
+            if (type == 'choice') {
+            initialCustomFields[field.custom_field_id] = taskToEdit.custom_fields[fieldName].lookupId || '';
+            }else{
+            initialCustomFields[field.custom_field_id] = taskToEdit.custom_fields[fieldName].value || '';
+            }
         }
-      }
-      else{
-        newfields.push(`${field.custom_field_id}`)
-      }
-    });
-    setnewcustomfields(newfields)
-    setCustomFields(initialCustomFields);
-  }
-}, [taskToEdit, availableCustomFields]);
-
-  const handlestatusSelect = (id,selected_id) => {
-    setFormData((prevData)=>{return {...prevData,[id]:selected_id}})
-
-  };
+        else{
+            newfields.push(`${field.custom_field_id}`)
+        }
+        });
+        setnewcustomfields(newfields)
+        setCustomFields(initialCustomFields);
+    }
+    }, [taskToEdit, availableCustomFields]);
 
   const handlecustomSelect = (id,selected_id) => {
     setCustomFields((prevData)=>{return {...prevData,[id]:selected_id}})
@@ -138,11 +93,6 @@ useEffect(() => {
   const handleOnChange = (event) => {
     const { name, value } = event.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
-  };
-
-  const handleRichTextChange = (value) => {
-    // Handle the change for rich text editor
-    setFormData((prevData) => ({ ...prevData, taskData: value }));
   };
 
   // Update custom field state
@@ -226,7 +176,7 @@ useEffect(() => {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ customFields, table_name: "task" }),
+            body: JSON.stringify({ customFields, table_name: "contact" }),
           });
     
           if (!response.ok) {
@@ -236,8 +186,7 @@ useEffect(() => {
           const result = await response.json();
           // Refresh the task list after adding a new task
           // setSortOrder('desc');
-          // setCurrentPage(totalPages);
-          refreshTasks('desc',totalPages);
+          refreshTasks();
           toggleModal();
         } catch (error) {
           console.error("Error adding custom fields:", error);
@@ -245,9 +194,7 @@ useEffect(() => {
         
       }else{
         // Refresh the task list after adding a new task
-        // setSortOrder('desc');
-        // setCurrentPage(totalPages);
-        refreshTasks('desc',totalPages);
+        refreshTasks();
         toggleModal();
       }
     } catch (error) {
@@ -279,7 +226,7 @@ useEffect(() => {
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ customFields, table_name: "task" }),
+              body: JSON.stringify({ customFields, table_name: "contact" }),
             });
       
             if (!response.ok) {
@@ -309,38 +256,26 @@ useEffect(() => {
             <button className="btn-close" onClick={toggleModal}></button>
           </div>
           <div className="modal-body">
-            <form onSubmit={taskToEdit?handeltaskupdate:handleSubmit}>
-              <div className="mb-3">
-                <label htmlFor="name" className="form-label">
-                  Display Name
-                </label>
-                <Text name="name" id="name" placeholder="Enter Display Name" onChange={handleOnChange} value={formData.name} required={true}/>
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="taskData" className="form-label">
-                  Task Data
-                </label>
-                <Textarea
-                  name="taskData"
-                  id="taskData"
-                  placeholder="Enter your taskData here"
-                  onChange={handleRichTextChange}
-                  value={formData.taskData}
-                />
-              </div>
-
-              <Dropdown
-                options={statuses}
-                onSelect={handlestatusSelect}
-                label="Status"
-                option_label="Select the Status"
-                name_colum="display_name"
-                id_column="status_id"
-                id="statusId"
-                preselectedId={formData.statusId}
-                required ={true}
-              />
+          <Box
+            component="form"
+            noValidate
+            autoComplete="on"
+            onSubmit={taskToEdit?handeltaskupdate:handleSubmit}
+            >
+                <div className="row">
+                    <div className="col-6">
+                        <label htmlFor="name" className="form-label">
+                        First Name
+                        </label>
+                        <Text name="first_name" id="first_name" placeholder="John" onChange={handleOnChange} value={formData.first_name} required={true}/>
+                    </div>
+                    <div className="col-6">
+                        <label htmlFor="last_name" className="form-label">
+                        Last Name
+                        </label>
+                        <Text name="last_name" id="last_name" placeholder="Doe" onChange={handleOnChange} value={formData.last_name} required={true}/>
+                    </div>
+                </div>
 
               <div className="row mt-4" id="all-task-details">
                   {columns.map((column, columnIndex) => (
@@ -358,6 +293,14 @@ useEffect(() => {
                             onChange={(e) => handleCustomFieldChange(field.custom_field_id, e.target.value)}
                             value={customFields[field.custom_field_id] || ''}
                           />
+                        //   <TextField 
+                        //     id={`customField-${field.custom_field_id}`} 
+                        //     label={field.display_name_singular}
+                        //     variant="outlined" 
+                        //     onChange={(e) => handleCustomFieldChange(field.custom_field_id, e.target.value)}
+                        //     value={customFields[field.custom_field_id] || ''} 
+                        //     />
+
                         )}
                         
                         {field.type === "number" && (
@@ -433,6 +376,8 @@ useEffect(() => {
               <button type="submit" className="btn btn-primary">
                 {taskToEdit ? "Update" : "Submit"}
               </button>
+            </Box>
+            <form onSubmit={taskToEdit?handeltaskupdate:handleSubmit}>
             </form>
           </div>
         </div>
@@ -441,4 +386,4 @@ useEffect(() => {
   );
 }
 
-export default FormComponent;
+export default ContactForm;

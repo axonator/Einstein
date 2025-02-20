@@ -14,7 +14,7 @@ function Dropdown({
 }) {
   const [selectedOption, setSelectedOption] = useState("");
   const [showTextField, setShowTextField] = useState(false);
-  const [otherValue, setOtherValue] = useState("");
+  const [addValue, setaddValue] = useState("");
 
   const handleChange = (event) => {
     const selected_value = event.target.value;
@@ -24,11 +24,11 @@ function Dropdown({
 
     setSelectedOption(selected_value);
 
-    if (selected_value.toLowerCase() === "other") {
+    if (selected_id== 404) {
       setShowTextField(true);
     } else {
       setShowTextField(false);
-      setOtherValue(""); // Clear the other field if not "other"
+      setaddValue(""); // Clear the add field if not "add +"
     }
 
     if (onSelect) {
@@ -42,17 +42,17 @@ function Dropdown({
         (option) => option[id_column] === preselectedId
       )?.[name_colum];
       setSelectedOption(preselectedValue);
-      if (preselectedValue?.toLowerCase() === "other") {
+      if (preselectedId == 404) {
         setShowTextField(true);
       }
     }
   }, [preselectedId, options, id_column, name_colum]);
 
-  const handleOtherChange = (event) => {
-    const value = "other404" + event.target.value
-    setOtherValue(event.target.value);
+  const handleaddChange = (event) => {
+    const value = "add404" + event.target.value
+    setaddValue(event.target.value);
     if (onSelect) {
-      onSelect(`${id}`, value); // Pass the other value to the parent
+      onSelect(`${id}`, value); // Pass the add value to the parent
     }
   };
 
@@ -84,18 +84,18 @@ function Dropdown({
         ))}
       </select>
 
-      {/* Show text field if "other" is selected */}
+      {/* Show text field if "add +" is selected */}
       {showTextField && (
         <div className="mt-3">
-          <label htmlFor={`${id}_other`} className="form-label">
+          <label htmlFor={`${id}_add`} className="form-label">
             {option_label}
           </label>
           <input
             type="text"
-            id={`${id}_other`}
+            id={`${id}_add`}
             className="form-control"
-            value={otherValue}
-            onChange={handleOtherChange}
+            value={addValue}
+            onChange={handleaddChange}
             placeholder="Please specify"
             required
           />

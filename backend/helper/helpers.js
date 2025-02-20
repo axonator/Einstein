@@ -131,6 +131,70 @@ const db = initDatabase();
       throw new Error(`Error updating data in ${tableName}: ${err.message}`);
     }
   }
+
+  async function countTotal( table_name, count_paramater='*', condition='') {
+    // Count total records
+    const countQuery = `
+    SELECT COUNT(${count_paramater}) AS total
+    FROM ${table_name} ${condition};`;
+    
+    try {
+      // Calculate total (Avoid fetching all rows)
+      const [countResult] = await db.execute(countQuery);
+      return countResult[0]?.total || 0;
+    } catch (err) {
+      throw new Error(`Error total count: ${err}`);
+    }
+  }
+
+  async function getCutsomDetails(id,identifier='task_id',table_name='task') {
+    const query = `
+      SELECT 
+        t.${identifier},
+        cf.custom_field_id,
+        cf.display_name_singular,
+        cf.display_name_plural,
+        CASE 
+            WHEN cft.ischoice = TRUE THEN l.option 
+            ELSE cft.value                         
+        END AS value,
+        cf.type AS type,
+        CASE 
+            WHEN cft.ischoice = TRUE THEN l.lookup_id
+            ELSE NULL
+        END AS lookup_id
+      FROM 
+        ${table_name} t
+      JOIN 
+        custom_field__${table_name} cft ON t.${identifier} = cft.fk_${table_name}_id
+      JOIN 
+        custom_field cf ON cft.fk_custom_field_id = cf.custom_field_id
+      LEFT JOIN 
+        lookup l ON cft.ischoice = TRUE AND cft.value = l.lookup_id
+      WHERE 
+        t.${identifier} = ${id};`;
+  
+    try {
+      const [result] = await db.execute(query);
+      // Transform CustomFields into the desired format
+      const customFieldsFormatted = {};
+      const customFields = []
+      result.forEach(field => {
+        customFieldsFormatted[field.display_name_singular] = {
+          plural: field.display_name_plural,
+          value: field.value,
+          type: field.type,
+          custom_field_id: field.custom_field_id,
+          lookupId: field.lookup_id,
+        };
+        customFields.push(field.display_name_singular);
+      });
+      
+      return {customFieldsFormatted: customFieldsFormatted, customFields : customFields};
+    } catch (err) {
+      throw new Error(`Error fetching custom fields for task id ${id}: ${err}`);
+    }
+  }
   
 
 module.exports = {
@@ -140,5 +204,7 @@ module.exports = {
   deleterow,
   getLatestCounter,
   updateTableData,
-  addNewRow
+  addNewRow,
+  countTotal,
+  getCutsomDetails
 };

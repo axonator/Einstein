@@ -5,6 +5,8 @@ import CustomFiledData from "./customfileds";
 import "./taskCard.css";
 import { getAppliedTags, getAvailableTags,removeTag, applyNewTag, addNewTag } from "../../../helper/helper";
 import Text from "../../form/text";
+import { GoLinkExternal } from "react-icons/go";
+
 
 function TaskCardTopSection({ task,fetchTasks }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -94,7 +96,18 @@ function TaskCardTopSection({ task,fetchTasks }) {
           <div key={columnIndex} className="col-md-6">
             {column.map(([key, value]) => (
               <p key={key} className="m-2">
-                <strong>{key}:</strong> {value.value || "N/A"}
+                <strong>{key}:</strong>{" "}
+                {value.type === "url" ? (
+                  key.toLowerCase() === 'email'?
+                  <a href={`mailto:${value.value}`} target="_blank" className="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover" rel="noopener noreferrer">
+                    {value.value}
+                  </a>:
+                  <a href={value.value} target="_blank" className="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover" rel="noopener noreferrer">
+                  {value.value}<GoLinkExternal className="ms-1"/>
+                </a>
+                ) : (
+                  value.value || "N/A"
+                )}
               </p>
             ))}
           </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { MdOutlineMailOutline } from "react-icons/md";
 
 const Side_Navbar = () => {
   return (
@@ -17,6 +18,11 @@ const Side_Navbar = () => {
         <li className="mb-3">
           <a href="/contacts" className="text-decoration-none text-dark">
             <i className="bi bi-person-circle" style={{ fontSize: '24px' }}></i>
+          </a>
+        </li>
+        <li className="mb-3">
+          <a href="/emails/all" className="text-decoration-none text-dark">
+            <MdOutlineMailOutline size={24}/>
           </a>
         </li>
       </ul>

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import DeletePopup from "../../common/deletepopup";
-import "bootstrap/dist/css/bootstrap.min.css";
+// import "bootstrap/dist/css/bootstrap.min.css";
 
 function EditDeleteIcons({ task, fetchTasks,onEdit }) {
-  const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   return (
     <>
@@ -12,16 +12,16 @@ function EditDeleteIcons({ task, fetchTasks,onEdit }) {
         <i className="bi bi-pencil-square btn btn-outline-primary mb-2" onClick={onEdit}></i>
         <i
           className="bi bi-trash3 btn btn-outline-danger"
-          onClick={() => setShowModal(true)} // Open modal
+          onClick={() => setShowDeleteModal(true)} // Open modal
         ></i>
       </div>
 
       {/* Conditional Rendering of DeletePopup */}
-      {showModal && (
+      {showDeleteModal && (
         <DeletePopup
           task={task}
           fetchTasks={fetchTasks}
-          onclose={setShowModal} // Close modal handler
+          onclose={setShowDeleteModal} // Close modal handler
         />
       )}
     </>

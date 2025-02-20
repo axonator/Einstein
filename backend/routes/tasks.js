@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const helper = require('../helper/helpers')
 const taskHelper = require('../helper/taskHelper');
+const contactHelpers = require('../helper/contactHelper')
 
   router.post('/addNewRows', async (req, res) => {
     try {
@@ -54,10 +55,17 @@ const taskHelper = require('../helper/taskHelper');
   router.post('/add_task', async (req, res) => {
     try {
       let formFields = req.body;
-      const latest_counter = await helper.getLatestCounter('tasks');
+      const counterName = formFields.counter_name;
+      const tableName = formFields.table_name;
+      const latest_counter = await helper.getLatestCounter(counterName);
       formFields['counter'] = latest_counter;
-      const results = await taskHelper.addNewTask(formFields);
-      res.status(200).json({ message: 'task added successfully', id: results.insertId });
+      if (tableName == "task") {
+        const results = await taskHelper.addNewTask(formFields);
+        res.status(200).json({ message: `${tableName} added successfully`, id: results.insertId });
+      }else{
+        const results = await contactHelpers.addNewContact(formFields);
+        res.status(200).json({ message: `${tableName} added successfully`, id: results.insertId });
+      }
     } catch (err) {
       console.error(err);
       res.status(500).send(err);
@@ -67,7 +75,13 @@ const taskHelper = require('../helper/taskHelper');
   // ADD NEW TASK WITH CUSTOM FIELDS
   router.post('/addTaskCustomFields', async (req, res) => {
     try {
-      const customFields = req.body;
+      const customFields = req.body.customFields;
+      const table_name = req.body.table_name;
+
+      // Check if customFields is a string and parse it
+      if (typeof customFields === "string") {
+        customFields = JSON.parse(customFields);
+    }
       
       // Extract newTaskId
       const newTaskId = customFields.newTaskId;
@@ -75,7 +89,7 @@ const taskHelper = require('../helper/taskHelper');
       // Remove newTaskId from customFields for processing
       delete customFields.newTaskId;
 
-      const results = await taskHelper.addNewTaskCustomFields(customFields, newTaskId);
+      const results = await taskHelper.addNewTaskCustomFields(customFields, newTaskId, table_name);
       res.status(200).json({ message: 'Custom Fields Added', results });
     } catch (err) {
       console.error(err);
@@ -157,7 +171,8 @@ const taskHelper = require('../helper/taskHelper');
       let total = await taskHelper.countTotal(selected_tab_id,identifier,ParentId);      
       for (const task of alltasks) {
         // Fetch and format custom fields
-        task.custom_fields = await taskHelper.getTaskCustomDetails(task.task_id, 'task_id');
+        const {customFieldsFormatted,customFields} = await helper.getCutsomDetails(task.task_id, 'task_id');
+        task.custom_fields = customFieldsFormatted;
       }
       // Apply filtering logic if FilteredCFT is not 'Filters'
       if (FilteredCFT !== 'Filters') {
@@ -181,24 +196,22 @@ const taskHelper = require('../helper/taskHelper');
     try {
       
       const id = req.params.id;
-      const { deleteChildren } = req.body; // Add a parameter to check if child tasks should be deleted
-      let table_name = 'task';
-      let column_name = 'task_id';
+      const { deleteChildren, table_name, column_name } = req.body; // Add a parameter to check if child tasks should be deleted
 
       // Delete child tasks if the checkbox is checked
-      if (deleteChildren) {
-        await helper.deleterow(table_name, ['parent_task_id'],[id]);
-
-      } else {
-        const columnValues = { parent_task_id: 404 };
-        const condition = { parent_task_id: id};
-
-        await helper.updateTableData(table_name, columnValues, condition)
+      if (table_name == 'task') {
+        if (deleteChildren) {
+          await helper.deleterow(table_name, ['parent_task_id'],[id]);
+  
+        } else {
+          const columnValues = { parent_task_id: 404 };
+          const condition = { parent_task_id: id};
+          await helper.updateTableData(table_name, columnValues, condition)
+        }
       }
 
       // Delete the task
       const result = await helper.deleterow(table_name, [column_name],[id]);
-      
       res.json(result);
     } catch (err) {
         res.status(500).json({ error: err });
