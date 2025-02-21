@@ -14,6 +14,17 @@ const initDatabase = () => {
       queueLimit: 0,
     });
   }
+
+  // Attach error handling only after pool is created
+  pool.on('error', (err) => {
+    console.error('MySQL Pool Error:', err);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+      console.log('Reinitializing database connection...');
+      pool = null; // Reset pool
+      initDatabase(); // Reinitialize
+    }
+  });
+  
   return pool;
 };
 

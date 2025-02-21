@@ -22,6 +22,7 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
   const requiredFields = ['Health','Status'];
   const excludeOtherOption = ['Status','Health','Lead Type','Country'];
 
+  
   const columnCount = 3;
   const columns = Array.from({ length: columnCount }, (_, index) =>
     availableCustomFields.filter((_, i) => i % columnCount === index)

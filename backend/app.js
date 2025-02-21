@@ -3,7 +3,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-
+const { initDatabase } = require('./database');
+const db = initDatabase();
 const tasksRoutes = require('./routes/tasks');
 const contactRoutes = require('./routes/contacts');
 const linkedinRoutes = require('./routes/linkedin')
@@ -22,6 +23,15 @@ app.use('/api/tasks', tasksRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/linkedin',linkedinRoutes);
 app.use('/api/common',commonRoutes);
+
+// Keep-Alive Query (every 5 minutes)
+setInterval(async () => {
+  try {
+    const [rows] = await db.query('SELECT 1'); // Simple query to keep the connection alive
+  } catch (err) {
+    console.error('Keep-alive query failed:', err);
+  }
+}, 5 * 60 * 1000); // Run every 5 minutes
 
 
 // Start LOCAL server only in development mode
