@@ -20,7 +20,7 @@ function FormComponent({ toggleModal,refreshTasks,parent_task_id,selectedTabId, 
   })
 
   const requiredFields = ['Health','Status'];
-  const excludeOtherOption = ['Status','Health','Lead Type'];
+  const excludeOtherOption = ['Status','Health','Lead Type','Country'];
 
   const [statuses, setStatuses] = useState([]); // For storing statuses list
   const columnCount = 3;
