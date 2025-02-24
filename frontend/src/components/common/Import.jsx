@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Input } from "@mui/material";
 import axios from "axios";
 
-function Import(setOpenImportContacts, OpenImportContacts){
+function Import({ refreshContacts, setOpenImportContacts, OpenImportContacts }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
@@ -14,13 +14,24 @@ function Import(setOpenImportContacts, OpenImportContacts){
 
   // Handle file selection
   const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const allowedExtensions = ["csv", "xls"];
+    const fileExtension = file.name.split(".").pop().toLowerCase();
+
+    if (!allowedExtensions.includes(fileExtension)) {
+      alert("Invalid file format. Please upload a CSV or XLS file.");
+      return;
+    }
+
+    setSelectedFile(file);
   };
 
-  // Upload CSV File
+  // Upload CSV/XLS File
   const handleUpload = async () => {
     if (!selectedFile) {
-      alert("Please select a CSV file to upload.");
+      alert("Please select a CSV or XLS file to upload.");
       return;
     }
 
@@ -33,11 +44,11 @@ function Import(setOpenImportContacts, OpenImportContacts){
       const response = await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/contacts/import/csv`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
-      alert(response.data.message || "Contacts imported successfully.");
+      refreshContacts();
       handleClose();
     } catch (error) {
       alert(error.response?.data?.error || "Error uploading file.");
+      console.log("error", error);
     } finally {
       setUploading(false);
     }
@@ -49,7 +60,7 @@ function Import(setOpenImportContacts, OpenImportContacts){
       <Dialog open={OpenImportContacts} onClose={handleClose}>
         <DialogTitle>Import Contacts</DialogTitle>
         <DialogContent>
-          <Input type="file" accept=".csv" onChange={handleFileChange} />
+          <Input type="file" accept=".csv, .xls, .xlsx" onChange={handleFileChange} />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="secondary">Cancel</Button>
@@ -60,6 +71,6 @@ function Import(setOpenImportContacts, OpenImportContacts){
       </Dialog>
     </>
   );
-};
+}
 
 export default Import;

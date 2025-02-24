@@ -14,13 +14,12 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
   const [formData, setFormData] = useState({
     "first_name": taskToEdit?taskToEdit.first_name:"",
     "last_name": taskToEdit?taskToEdit.last_name:"",
-    "task_type_id":selectedTabId,
     "counter_name":"contacts",
     "table_name":"contact"
   })
 
   const requiredFields = ['Health','Status'];
-  const excludeOtherOption = ['Status','Health','Lead Type','Country'];
+  const excludeOtherOption = ['Status','Health','Lead Type','Country','Contact Status'];
 
   
   const columnCount = 3;
@@ -257,24 +256,19 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
             <button className="btn-close" onClick={toggleModal}></button>
           </div>
           <div className="modal-body">
-          <Box
-            component="form"
-            noValidate
-            autoComplete="on"
-            onSubmit={taskToEdit?handeltaskupdate:handleSubmit}
-            >
+          <form onSubmit={taskToEdit?handeltaskupdate:handleSubmit}>
                 <div className="row">
                     <div className="col-6">
-                        <label htmlFor="name" className="form-label">
+                        {/* <label htmlFor="name" className="form-label">
                         First Name
-                        </label>
-                        <Text name="first_name" id="first_name" placeholder="John" onChange={handleOnChange} value={formData.first_name} required={true}/>
+                        </label> */}
+                        <Text name="first_name" id="first_name" placeholder="First Name" onChange={handleOnChange} value={formData.first_name} required={true}/>
                     </div>
                     <div className="col-6">
-                        <label htmlFor="last_name" className="form-label">
+                        {/* <label htmlFor="last_name" className="form-label">
                         Last Name
-                        </label>
-                        <Text name="last_name" id="last_name" placeholder="Doe" onChange={handleOnChange} value={formData.last_name} required={true}/>
+                        </label> */}
+                        <Text name="last_name" id="last_name" placeholder="Last Name" onChange={handleOnChange} value={formData.last_name} required={true}/>
                     </div>
                 </div>
 
@@ -283,14 +277,14 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
                     <div key={columnIndex} className={`col-md-${12/columnCount}`}>
                       {column.map((field) => (
                         <div className="mb-3" key={field.custom_field_id}>
-                        {field.type != "choice"?<label htmlFor={`customField-${field.custom_field_id}`} className="form-label">
+                        {/* {field.type != "choice"?<label htmlFor={`customField-${field.custom_field_id}`} className="form-label">
                           {field.display_name_singular}
-                        </label>:null}
+                        </label>:null} */}
                         
                         {field.type === "text" && (
                           <Text
                             id={`customField-${field.custom_field_id}`}
-                            placeholder={`Enter ${field.display_name_singular}`}
+                            placeholder={`${field.display_name_singular}`}
                             onChange={(e) => handleCustomFieldChange(field.custom_field_id, e.target.value)}
                             value={customFields[field.custom_field_id] || ''}
                           />
@@ -309,7 +303,7 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
                             type="number"
                             id={`customField-${field.custom_field_id}`}
                             className="form-control"
-                            placeholder={`Enter ${field.display_name_singular}`}
+                            placeholder={`${field.display_name_singular}`}
                             onChange={(e) => handleCustomFieldChange(field.custom_field_id, e.target.value)}
                             onWheel={(e) => e.target.blur()} // Prevent number input from scrolling
                             value={customFields[field.custom_field_id] || ''}
@@ -337,7 +331,7 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
                                 type={field.display_name_singular.toLowerCase() === "email" ? "email" : "url"}
                                 id={`customField-${field.custom_field_id}`}
                                 className="form-control"
-                                placeholder={`Enter ${field.display_name_singular}`}
+                                placeholder={`${field.display_name_singular}`}
                                 onChange={(e) => handleCustomFieldChange(field.custom_field_id, e.target.value)}
                                 value={customFields[field.custom_field_id] || ''}
                               />
@@ -349,8 +343,8 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
                           <Dropdown
                           options={dropdownOptions[field.display_name_singular]} // Use the fetched options here
                           onSelect={handlecustomSelect}
-                          label={`Select ${field.display_name_singular}`}
-                          option_label={`Choose ${field.display_name_singular}`}
+                        //   label={`Select ${field.display_name_singular}`}
+                          option_label={`${field.display_name_singular}`}
                           name_colum="option"
                           id_column="lookup_id"
                           id={field.custom_field_id}
@@ -377,8 +371,6 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
               <button type="submit" className="btn btn-primary">
                 {taskToEdit ? "Update" : "Submit"}
               </button>
-            </Box>
-            <form onSubmit={taskToEdit?handeltaskupdate:handleSubmit}>
             </form>
           </div>
         </div>

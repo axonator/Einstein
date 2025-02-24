@@ -136,15 +136,36 @@ export default function Contact() {
   const [Deletemessage, setDeleteMessage] = React.useState(null);
   const [DeletemessageType, setDeleteMessageType] = React.useState(""); 
   const [openImportContacts, setOpenImportContacts] = React.useState(false);
+  const [totalPages, setTotalPages] = React.useState(0);
+  
   
 
   const ExcludeColumns = ['id', 'first_name', 'last_name', 'order_number']
 
   async function getContacts() {
-    const response = await axios.get(`${import.meta.env.VITE_LOCAL_URL}/api/contacts`);
-    setContacts(response.data.allcontacts);
-    setcolumns(response.data.columns)
-    settotalContacts(response.data.total)
+    // const response = await axios.get(`${import.meta.env.VITE_LOCAL_URL}/api/contacts`);
+    const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/contacts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(
+          { 
+            page_size : rowsPerPage,
+            page_number : page + 1,
+          }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tasks: ${response.status}`);
+      }
+      
+      const {allcontacts, total, columns} = await response.json();
+      
+    setContacts(allcontacts);
+    setcolumns(columns)
+    settotalContacts(total)
+    setTotalPages(Math.ceil(total / rowsPerPage) - 1)
     const data = await getcustomFields(26,setError,setLoading);
     setavailableCustomFields(data)
 }
@@ -223,6 +244,10 @@ export default function Contact() {
     getContacts();
   }, []);
 
+  React.useEffect(() => {
+    getContacts();
+  }, [page, rowsPerPage]); // Re-fetch when page or rows per page changes
+
   EnhancedTableToolbar.propTypes = {
     numSelected: PropTypes.number.isRequired,
   };
@@ -288,9 +313,13 @@ export default function Contact() {
       }, 2000);
   }
 
+  const handlePageJump = (e) => {
+    setPage(parseInt(e.target.value, 10));
+  };
+
   // Avoid a layout jump when reaching the last page with empty contacts.
   const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - contacts.length) : 0;
+    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - totalContacts) : 0;
 
   return (
     <Box sx={{ width: '100%' }} className="noshadow">
@@ -314,12 +343,11 @@ export default function Contact() {
               orderBy={orderBy}
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
-              rowCount={contacts.length}
+              rowCount={totalContacts}
             />
             <TableBody>
               {contacts
                 .sort(getComparator(order, orderBy))
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row, index) => {
                   const isItemSelected = selected.includes(row.id);
                   const labelId = `enhanced-table-checkbox-${index}`;
@@ -372,15 +400,29 @@ export default function Contact() {
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, { label: "All", value: totalContacts }]}
-          component="div"
-          count={contacts.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
+        <div className='row mt-2'>
+            <div className='col-1'>
+                <select 
+                    className="form-select w-auto ms-2" 
+                    value={page} 
+                    onChange={handlePageJump}>
+                    {[...Array(totalPages)].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                    ))}
+                </select>
+            </div>
+            <div className='col'>
+                <TablePagination
+                rowsPerPageOptions={[5, 10, 20, 30, 50 ,75, 100 ,{ label: "All", value: totalContacts }]}
+                component="div"
+                count={totalContacts}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                />
+            </div>
+        </div>
       </Paper>
       <FormControlLabel
         control={<Switch checked={dense} onChange={handleChangeDense} />}
@@ -408,7 +450,7 @@ export default function Contact() {
       )}
 
       {openImportContacts && 
-            <Import setOpenImportContacts={setOpenImportContacts} open={openImportContacts}/>
+            <Import refreshContacts={getContacts} setOpenImportContacts={setOpenImportContacts} OpenImportContacts={openImportContacts}/>
       }
       
     </Box>

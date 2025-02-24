@@ -43,14 +43,12 @@ const db = initDatabase();
     }
   }
   
-  async function getIdsByNames(tableName, names) {
-    const query = `SELECT id, name FROM ${tableName} WHERE name IN (?);`;
+  async function getIdsByNames(column_names,tableName, conditionColumn, values) {
+    const placeholders = values.map(() => '?').join(',');
+    const query = `SELECT ${column_names} FROM ${tableName} WHERE ${conditionColumn} IN (${placeholders});`;
     try {
-      const [rows] = await db.execute(query, [names]);
-      return rows.reduce((map, row) => {
-        map[row.name] = row.id;
-        return map;
-      }, {});
+      const [rows] = await db.execute(query, values);
+      return rows;
     } catch (err) {
       throw new Error(`Error fetching IDs from ${tableName}: ${err.message}`);
     }
