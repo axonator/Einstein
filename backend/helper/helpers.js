@@ -1,4 +1,4 @@
-const { initDatabase } = require('../database');
+const { initDatabase,executeQuery } = require('../database');
 const db = initDatabase();
 
   async function addNewRow(table_name, column_names, values, VALUES) {
@@ -138,8 +138,8 @@ const db = initDatabase();
     
     try {
       // Calculate total (Avoid fetching all rows)
-      const [countResult] = await db.execute(countQuery);
-      return countResult[0]?.total || 0;
+      const [countResult] = await executeQuery(countQuery);
+      return countResult.total || 0;
     } catch (err) {
       throw new Error(`Error total count: ${err}`);
     }

@@ -28,7 +28,21 @@ const initDatabase = () => {
   return pool;
 };
 
-module.exports = { initDatabase };
+// **Execute Query Helper** (Prevents Statement Leaks)
+async function executeQuery(query, params = []) {
+  const connection = await pool.getConnection();
+  try {
+    const [rows] = await connection.execute(query, params);
+    return rows;
+  } catch (err) {
+    console.error('Database Query Error:', err.message);
+    throw new Error(`Query failed: ${err.message}`);
+  } finally {
+    connection.release(); // Always release connection back to the pool
+  }
+}
+
+module.exports = { initDatabase, executeQuery };
 
 
 
