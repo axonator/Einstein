@@ -8,9 +8,6 @@ const contactHelpers = require('../helper/contactHelper')
     try {
       
       const { table_name, columns, values,onlyValues } = req.body;
-      console.log("request body",req.body);
-      
-
       // Validate the request body
       if (!table_name || !Array.isArray(columns) || !Array.isArray(values)) {
         return res.status(400).json({ error: "Invalid input. Please provide table_name, columns, and values." });

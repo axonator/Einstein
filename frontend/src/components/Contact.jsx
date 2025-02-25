@@ -267,7 +267,7 @@ export default function Contact() {
     }, 1000); // Delays API request by 500ms
 
     return () => clearTimeout(delaySearch); // Cleanup function to prevent multiple calls
-}, [searchQuery, page, rowsPerPage]);
+}, [searchQuery]);
 
   EnhancedTableToolbar.propTypes = {
     numSelected: PropTypes.number.isRequired,
@@ -338,10 +338,6 @@ export default function Contact() {
     setPage(parseInt(e.target.value, 10));
   };
 
-  // Avoid a layout jump when reaching the last page with empty contacts.
-  const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - totalContacts) : 0;
-
   return (
     <Box sx={{ width: '100%' }} className="noshadow">
         
@@ -352,7 +348,7 @@ export default function Contact() {
                 value={searchQuery}
                 className='my-2'
                 onChange={(e) => setSearchQuery(e.target.value)}
-                sx={{ ml: 2, width: '200px' }}
+                sx={{ ml: 2, width: '40%' }}
             />
         {Deletemessage && (
             <Alert icon={DeletemessageType === "success" ? <CheckIcon fontSize="inherit" /> : null} severity={DeletemessageType} className='mb-2'>
@@ -420,15 +416,6 @@ export default function Contact() {
                     </TableRow>
                   );
                 })}
-              {emptyRows > 0 && (
-                <TableRow
-                  style={{
-                    height: (dense ? 33 : 53) * emptyRows,
-                  }}
-                >
-                  <TableCell colSpan={6} />
-                </TableRow>
-              )}
             </TableBody>
           </Table>
         </TableContainer>

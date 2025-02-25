@@ -110,20 +110,19 @@ const db = initDatabase();
   async function updateTableData(tableName, columnValues, condition) {
     // Construct the SET clause dynamically from columnValues
     const setClause = Object.keys(columnValues)
-      .map(column => `${column} = ?`)
-      .join(', ');
-  
+    .map(column => `${column} = ?`)
+    .join(', ');
+    
     // Construct the WHERE clause dynamically from condition
     const whereClause = Object.keys(condition)
-      .map(column => `${column} = ?`)
-      .join(' AND ');
-  
+    .map(column => `${column} = ?`)
+    .join(' AND ');
+    
     const query = `UPDATE ${tableName} SET ${setClause} WHERE ${whereClause}`;
     const values = [...Object.values(columnValues), ...Object.values(condition)];
   
     try {
       const [result] = await db.execute(query, values);
-      
       return { message: `Successfully updated ${result.affectedRows} rows in ${tableName}.` };
     } catch (err) {
       throw new Error(`Error updating data in ${tableName}: ${err.message}`);

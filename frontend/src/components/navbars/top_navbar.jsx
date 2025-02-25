@@ -19,14 +19,14 @@ const Navbar = () => {
       <div className="container-fluid">
         <a href='/'><img src="./assets/axonator_logo.png" alt="Company Logo" className="navbar-logo"/></a>
         
-        <form className="d-flex search-container">
+        {/* <form className="d-flex search-container">
           <input
             className="form-control me-2 search-input"
             type="search"
             placeholder="Search"
             aria-label="Search"
           />
-        </form>
+        </form> */}
         {/* <div>
           <GlobalSearch onSearch={handleSearch} />
           <div className="search-results">

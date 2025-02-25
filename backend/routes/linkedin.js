@@ -34,7 +34,6 @@ router.post('/', async (req, res) => {
     
     try {
         const response = await axios.request(options);
-        console.log(response.data);
         res.json(response.data.data)
     } catch (error) {
         console.error(error);
