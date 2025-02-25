@@ -25,13 +25,19 @@ router.post('/get_table_data', async (req, res) => {
       const { 
         page_size,
         page_number,
+        search
       } = req.body;
       const offset = (page_number - 1) * page_size;
       const limit = `LIMIT ${page_size} OFFSET ${offset}`
-      let allcontacts = await helpers.get_names('contact', '*', limit);
+
+      let searchCondition = "";
+      if (search) {
+          searchCondition = `WHERE first_name LIKE '%${search}%' OR last_name LIKE '%${search}%'`; 
+      }
+      let allcontacts = await helpers.get_names('contact', '*', `${searchCondition} ${limit}`);
       
-      let columns = Object.keys(allcontacts[0]).filter(key=>key);
-      let total = await helpers.countTotal('contact');
+      let columns = allcontacts.length > 0 ? Object.keys(allcontacts[0]).filter(key => key) : [];
+      let total = search ? allcontacts.length : await helpers.countTotal('contact');
             
       for (const contact of allcontacts) {
         const {customFieldsFormatted,customFields} = await helpers.getCutsomDetails(contact.id, 'id','contact');

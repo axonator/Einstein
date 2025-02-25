@@ -31,6 +31,8 @@ import Button from '@mui/material/Button';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import Import from './common/Import';
 import axios from 'axios';
+import TextField from '@mui/material/TextField';
+import Text from './form/text';
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -137,7 +139,8 @@ export default function Contact() {
   const [DeletemessageType, setDeleteMessageType] = React.useState(""); 
   const [openImportContacts, setOpenImportContacts] = React.useState(false);
   const [totalPages, setTotalPages] = React.useState(0);
-  
+  const [searchQuery, setSearchQuery] = React.useState("");
+
   
 
   const ExcludeColumns = ['id', 'first_name', 'last_name', 'order_number']
@@ -153,6 +156,7 @@ export default function Contact() {
           { 
             page_size : rowsPerPage,
             page_number : page + 1,
+            search: searchQuery,  // Send search query
           }),
       });
 
@@ -176,7 +180,15 @@ export default function Contact() {
 
 
     function EnhancedTableToolbar(props) {
-    const { numSelected } = props;
+    const { numSelected, searchQuery, setSearchQuery } = props;
+    const [localSearchQuery, setLocalSearchQuery] = React.useState(searchQuery);
+    React.useEffect(() => {
+        const delaySearch = setTimeout(() => {
+            setSearchQuery(localSearchQuery);
+        }, 500); // Update searchQuery after 500ms
+
+        return () => clearTimeout(delaySearch);
+    }, [localSearchQuery]);
     return (
         <Toolbar
         sx={[
@@ -215,6 +227,7 @@ export default function Contact() {
             </Tooltip>
             </Typography>
         )}
+            
         {numSelected > 0 ? (
             <Tooltip title="Delete">
             <IconButton onClick={() => setShowDeleteModal(true)}>
@@ -247,6 +260,14 @@ export default function Contact() {
   React.useEffect(() => {
     getContacts();
   }, [page, rowsPerPage]); // Re-fetch when page or rows per page changes
+
+  React.useEffect(() => {
+    const delaySearch = setTimeout(() => {
+        getContacts();
+    }, 1000); // Delays API request by 500ms
+
+    return () => clearTimeout(delaySearch); // Cleanup function to prevent multiple calls
+}, [searchQuery, page, rowsPerPage]);
 
   EnhancedTableToolbar.propTypes = {
     numSelected: PropTypes.number.isRequired,
@@ -323,13 +344,24 @@ export default function Contact() {
 
   return (
     <Box sx={{ width: '100%' }} className="noshadow">
+        
+            <TextField
+                label="Search Contacts"
+                variant="outlined"
+                size="small"
+                value={searchQuery}
+                className='my-2'
+                onChange={(e) => setSearchQuery(e.target.value)}
+                sx={{ ml: 2, width: '200px' }}
+            />
         {Deletemessage && (
             <Alert icon={DeletemessageType === "success" ? <CheckIcon fontSize="inherit" /> : null} severity={DeletemessageType} className='mb-2'>
                 {Deletemessage}
             </Alert>
         )}
       <Paper sx={{ width: '100%', mb: 2, boxShadow: 'none' }}>
-        <EnhancedTableToolbar numSelected={selected.length} />
+        <EnhancedTableToolbar numSelected={selected.length} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+
         <TableContainer>
           <Table
             sx={{ minWidth: 750 }}
@@ -402,14 +434,17 @@ export default function Contact() {
         </TableContainer>
         <div className='row mt-2'>
             <div className='col-1'>
-                <select 
-                    className="form-select w-auto ms-2" 
-                    value={page} 
-                    onChange={handlePageJump}>
-                    {[...Array(totalPages)].map((_, i) => (
-                        <option key={i + 1} value={i + 1}>{i + 1}</option>
-                    ))}
-                </select>
+                {
+                    totalPages > 0 &&
+                    <select 
+                        className="form-select w-auto ms-2" 
+                        value={page} 
+                        onChange={handlePageJump}>
+                        {[...Array(totalPages)].map((_, i) => (
+                            <option key={i + 1} value={i + 1}>{i + 1}</option>
+                        ))}
+                    </select>
+                }
             </div>
             <div className='col'>
                 <TablePagination
