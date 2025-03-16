@@ -48,7 +48,6 @@ function CampaignForm({ toggleModal,refreshTasks, CampaignDetails=false}) {
         "values" : [],
         "onlyValues" : ["newCampaignId"]
     })
-    console.log("newwwwwwwwwwwwwwwwwww");
     
 
     const [Label, setLabel] = useState([]);
