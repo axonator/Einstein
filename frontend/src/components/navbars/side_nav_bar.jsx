@@ -21,7 +21,7 @@ const Side_Navbar = () => {
           </a>
         </li>
         <li className="mb-3">
-          <a href="/emails/all" className="text-decoration-none text-dark">
+          <a href="/emails" className="text-decoration-none text-dark">
             <MdOutlineMailOutline size={24}/>
           </a>
         </li>

@@ -13,7 +13,7 @@ import Side_Navbar from './components/navbars/side_nav_bar.jsx';
 const router = createBrowserRouter([
     { path: "/view", element: <SingleView/> },
     {path : "/contacts", element: <Contact/>},
-    {path : "/emails/all", element: <Campaigns/>},
+    {path : "/emails", element: <Campaigns/>},
     {path : "/emails/:campaignId", element: <SingleCampaign/>}
   ]);
 
