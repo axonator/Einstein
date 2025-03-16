@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Input } from "@mui/material";
 import axios from "axios";
 
-function Import({ refreshContacts, setOpenImportContacts, OpenImportContacts }) {
+function Import({ refreshContacts, setOpenImportContacts, OpenImportContacts, campaignDetails }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
@@ -37,9 +37,9 @@ function Import({ refreshContacts, setOpenImportContacts, OpenImportContacts }) 
 
     const formData = new FormData();
     formData.append("file", selectedFile);
+    formData.append("campaignDetails", campaignDetails ? JSON.stringify(campaignDetails) : campaignDetails)
 
     setUploading(true);
-
     try {
       const response = await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/contacts/import/csv`, formData, {
         headers: { "Content-Type": "multipart/form-data" },

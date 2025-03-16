@@ -22,7 +22,7 @@ function DeletePopup({ task, fetchTasks, onclose }) {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/${task.task_id}`, {
+      await axios.delete(`${import.meta.env.VITE_LOCAL_URL}/api/common/${task.task_id}`, {
         data: { 
           deleteChildren: deleteChildren, 
           table_name: 'task', 

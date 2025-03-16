@@ -16,9 +16,8 @@ function isCustomFieldAvailable(filedname,customfields) {
 }
 
 async function getcustomFields(task_type_id,setError,setLoading) {
-    
     try {
-        const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/getCustomFields`, {
+        const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/common/getCustomFields`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -88,6 +87,8 @@ async function getAppliedTags(taskid) {
     }
   }
 
+  function replacePlaceholders(textTochange, changeFrom) {
+      return textTochange.replace(/\{(.*?)\}/g, (match, key) => changeFrom[key] || match);
+  }
 
-
-export {toTitleCase,isCustomFieldAvailable,getcustomFields, getAppliedTags, getAvailableTags, removeTag, applyNewTag, addNewTag}
+export {toTitleCase,isCustomFieldAvailable,getcustomFields, getAppliedTags, getAvailableTags, removeTag, applyNewTag, addNewTag, replacePlaceholders}

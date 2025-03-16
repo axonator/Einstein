@@ -7,7 +7,7 @@ function ContactDeletePopup({ contactIDs, fetchContacts, onclose, setcontactIDs,
     try {
       await Promise.all(
         contactIDs.map(async (id) => {
-          await axios.delete(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/${id}`, {
+          await axios.delete(`${import.meta.env.VITE_LOCAL_URL}/api/common/${id}`, {
             data: { 
               deleteChildren: false, 
               table_name: 'contact', 

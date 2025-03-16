@@ -30,9 +30,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import Button from '@mui/material/Button';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import Import from './common/Import';
-import axios from 'axios';
 import TextField from '@mui/material/TextField';
-import Text from './form/text';
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -49,9 +47,6 @@ function getComparator(order, orderBy) {
     ? (a, b) => descendingComparator(a, b, orderBy)
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
-
-
-
 
 
 function EnhancedTableHead(props) {
@@ -120,12 +115,12 @@ EnhancedTableHead.propTypes = {
   rowCount: PropTypes.number.isRequired,
 };
 
-export default function Contact() {
+export default function Contact({table_name="contact", columns = '*', condition = '', showTools = true, campaignDetails=false}) {
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState('name');
   const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
-  const [dense, setDense] = React.useState(false);
+  // const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [contacts, setContacts] = React.useState([]);
   const [COLUMNS, setcolumns] = React.useState([]);
@@ -143,10 +138,18 @@ export default function Contact() {
 
   
 
-  const ExcludeColumns = ['id', 'first_name', 'last_name', 'order_number']
+  const ExcludeColumns = ['id', 'first_name', 'last_name', 'order_number', 'body', 'subject', 'status','date_to_send',"time_to_send"]
 
   async function getContacts() {
     // const response = await axios.get(`${import.meta.env.VITE_LOCAL_URL}/api/contacts`);
+    if (searchQuery) {
+      if (condition.length > 1) {
+        condition += ` AND (first_name LIKE '%${searchQuery}%' OR last_name LIKE '%${searchQuery}%')`; 
+      }else{
+        condition = `WHERE first_name LIKE '%${searchQuery}%' OR last_name LIKE '%${searchQuery}%'`; 
+      }
+    }
+    
     const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/contacts`, {
         method: 'POST',
         headers: {
@@ -156,7 +159,9 @@ export default function Contact() {
           { 
             page_size : rowsPerPage,
             page_number : page + 1,
-            search: searchQuery,  // Send search query
+            TableName : table_name,
+            Columns : columns,
+            Condition : condition,
           }),
       });
 
@@ -164,15 +169,16 @@ export default function Contact() {
         throw new Error(`Failed to fetch tasks: ${response.status}`);
       }
       
-      const {allcontacts, total, columns} = await response.json();
-      
-    setContacts(allcontacts);
-    setcolumns(columns)
-    settotalContacts(total)
-    setTotalPages(Math.ceil(total / rowsPerPage) - 1)
-    const data = await getcustomFields(26,setError,setLoading);
-    setavailableCustomFields(data)
-}
+      const {allcontacts, total, tableColumns} = await response.json();
+
+      setContacts(allcontacts);
+      setcolumns(tableColumns)
+      settotalContacts(total)
+      setTotalPages(Math.ceil(total / rowsPerPage) - 1)
+      const data = await getcustomFields(26,setError,setLoading);
+      setavailableCustomFields(data)
+    }
+
     // Open dialog
     const handleOpenImportContacts = () => {
         setOpenImportContacts(true);
@@ -220,11 +226,13 @@ export default function Contact() {
             className='d-flex align-items-center'
             >
             Contacts
-            <Tooltip title = "Add Contact">
-                <IconButton size='small' className='ms-1' onClick={toggleModal}>
-                    <PersonAddAlt1RoundedIcon/>
-                </IconButton>
-            </Tooltip>
+            {showTools && 
+              <Tooltip title = "Add Contact">
+                  <IconButton size='small' className='ms-1' onClick={toggleModal}>
+                      <PersonAddAlt1RoundedIcon/>
+                  </IconButton>
+              </Tooltip>
+            }
             </Typography>
         )}
             
@@ -236,18 +244,17 @@ export default function Contact() {
             </Tooltip>
             
         ) : (
+          showTools && 
             <div className='d-flex'>
                 <Button variant="outlined" className='me-2 rounded' size='small' onClick={handleOpenImportContacts} startIcon={<CloudDownloadIcon />}>
                     Import
                 </Button>
-
-            <Tooltip title="Filter list">
-            <IconButton>
-                <FilterListIcon />
-            </IconButton>
-            </Tooltip>
-            </div>
-            
+                <Tooltip title="Filter list">
+                <IconButton>
+                    <FilterListIcon />
+                </IconButton>
+                </Tooltip>
+              </div>
         )}
         </Toolbar>
     );
@@ -320,12 +327,11 @@ export default function Contact() {
     setPage(0);
   };
 
-  const handleChangeDense = (event) => {
-    setDense(event.target.checked);
-  };
+  // const handleChangeDense = (event) => {
+  //   setDense(event.target.checked);
+  // };
 
   function handleDelte(message,messageType) {
-    console.log("called",message,messageType);
     
     setDeleteMessage(message);
     setDeleteMessageType(messageType);
@@ -337,7 +343,7 @@ export default function Contact() {
   const handlePageJump = (e) => {
     setPage(parseInt(e.target.value, 10));
   };
-
+  
   return (
     <Box sx={{ width: '100%' }} className="noshadow">
         
@@ -362,7 +368,7 @@ export default function Contact() {
           <Table
             sx={{ minWidth: 750 }}
             aria-labelledby="tableTitle"
-            size={dense ? 'small' : 'medium'}
+            size='medium'
           >
             <EnhancedTableHead
             columns={COLUMNS}
@@ -405,14 +411,25 @@ export default function Contact() {
                       
                       <TableCell component="th" id={labelId} scope="row" align="left" >{row.first_name}</TableCell>
                       <TableCell align="left">{row.last_name}</TableCell>
+                      {campaignDetails ?
+                        <>
+                          <TableCell align="left">{row.body}</TableCell>
+                          <TableCell align="left">{row.subject}</TableCell>
+                          <TableCell align="left">{row.status}</TableCell>
+                          <TableCell align="left">{row.date_to_send}</TableCell>
+                          <TableCell align="left">{row.time_to_send}</TableCell>
 
-                        {COLUMNS.filter(column_name => !ExcludeColumns.includes(column_name))
-                            .map((column_name) => (
-                                <TableCell key={column_name} align="left">
-                                    {row.custom_fields?.[column_name]?.value || ""}
-                                </TableCell>
-                            ))
-                        }
+                        </>
+                       :
+                       null
+                      }
+                      {COLUMNS.filter(column_name => !ExcludeColumns.includes(column_name))
+                          .map((column_name) => (
+                              <TableCell key={column_name} align="left">
+                                  {row.custom_fields?.[column_name]?.value || ""}
+                              </TableCell>
+                          ))}
+
                     </TableRow>
                   );
                 })}
@@ -446,10 +463,10 @@ export default function Contact() {
             </div>
         </div>
       </Paper>
-      <FormControlLabel
+      {/* <FormControlLabel
         control={<Switch checked={dense} onChange={handleChangeDense} />}
         label="Dense padding"
-      />
+      /> */}
       {showForm &&
         <ContactForm 
             toggleModal={toggleModal} 
@@ -458,6 +475,7 @@ export default function Contact() {
             selectedTabName={"Contact"} 
             availableCustomFields={availableCustomFields} 
             taskToEdit={null}
+            campaignDetails = {campaignDetails}
             />
       }
       {/* Conditional Rendering of DeletePopup */}
@@ -472,7 +490,7 @@ export default function Contact() {
       )}
 
       {openImportContacts && 
-            <Import refreshContacts={getContacts} setOpenImportContacts={setOpenImportContacts} OpenImportContacts={openImportContacts}/>
+            <Import refreshContacts={getContacts} setOpenImportContacts={setOpenImportContacts} OpenImportContacts={openImportContacts} campaignDetails={campaignDetails}/>
       }
       
     </Box>

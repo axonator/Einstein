@@ -6,16 +6,20 @@ import { useState,useEffect } from "react";
 import Box from '@mui/material/Box';
 // import TextField from '@mui/material/TextField';
 import axios from "axios";
+import { replacePlaceholders } from "../../helper/helper";
+import { replace } from "react-router-dom";
 
-function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, availableCustomFields, taskToEdit}) {
+
+function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, availableCustomFields, taskToEdit, campaignDetails=false}) {
   const [customFields, setCustomFields] = useState({});
-  const [insertNewCustomFields,setnewcustomfields]= useState([]);;
+  const [insertNewCustomFields,setnewcustomfields]= useState([]);
   const [dropdownOptions, setDropdownOptions] = useState({});
   const [formData, setFormData] = useState({
     "first_name": taskToEdit?taskToEdit.first_name:"",
     "last_name": taskToEdit?taskToEdit.last_name:"",
     "counter_name":"contacts",
-    "table_name":"contact"
+    "table_name":"contact",
+    "column_names" : ["first_name", "last_name", "order_number"]
   })
 
   const requiredFields = ['Health','Status'];
@@ -29,7 +33,7 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
   
   const fetchcustomdropdownlist = async (table_name, column_name="*",condition='',listName) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/get_list`, {
+      const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/common/get_list`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -138,7 +142,7 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
     
     if (addNewlookup['values'].length > 0) {
       try {
-        const response = await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/addNewRows`, addNewlookup);
+        const response = await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/common/addNewRows`, addNewlookup);
         // Replace `customFields` values with corresponding IDs
         const responseMapping = response.data;
         Object.entries(customFields).forEach(([key, value]) => {
@@ -153,7 +157,7 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/add_task`, {
+      const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/common/add_new`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -167,11 +171,27 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
 
       const result = await response.json();
       let newTaskId = result.id
+      if (campaignDetails) {
+        let Body = campaignDetails?.raw_body ?? "THIS IS TEST BODY";
+        Body = replacePlaceholders(Body,formData);
+
+        let Subject = campaignDetails?.raw_subject ?? "THIS IS TEST SUBJECT";
+        Subject = replacePlaceholders(Subject, formData);
+        console.log("subject",Subject);
+
+        const status = 'Draft'
+
+        await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/common/addNewRows`, {
+          table_name: "campaign_schedule",
+          columns: ["fk_contact_id", "body","subject","status","fk_campaign_id"],
+          values: [newTaskId, Body, Subject, status, campaignDetails.id]
+      });
+      }
       if (Object.keys(customFields).length>0) {
         try {
           customFields["newTaskId"]=newTaskId
           
-          const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/addTaskCustomFields`, {
+          const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/common/addCustomFields`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -208,12 +228,12 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
     
     try {
       // Make an API call to update the task Fiedls
-      await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/updateTaskFields/${taskToEdit.task_id}`, {formData });
+      await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/common/updateFields/${taskToEdit.task_id}`, {formData });
       
       if(Object.keys(customFields).length>0){
         for (const key in customFields) {
           if (! insertNewCustomFields.includes(key)) {
-            await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/updateTaskCustomFields/${taskToEdit.task_id}`, { newId:customFields[key] ,customFieldId:key});
+            await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/common/updateCustomFields/${taskToEdit.task_id}`, { newId:customFields[key] ,customFieldId:key});
             delete customFields[key]
           }
         }
@@ -221,7 +241,7 @@ function ContactForm({ toggleModal,refreshTasks,selectedTabId, selectedTabName, 
         if (Object.keys(customFields).length>0) {
           try {
             customFields["newTaskId"]=taskToEdit.task_id
-            const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/addTaskCustomFields`, {
+            const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/common/addCustomFields`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

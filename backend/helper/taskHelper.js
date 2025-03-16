@@ -138,31 +138,6 @@ async function get_task_type_id(display_name_singular) {
   }
 }
 
-async function addNewTask(fields) {
-  const { task_type_id, statusId, taskData, name, counter, parent_task_id } = fields;
-  const nextOrderNumber = counter + 1000;
-  
-  const query = `INSERT INTO task 
-    (display_name, task_data, fk_task_type_id, fk_status_id, order_number, parent_task_id) 
-    VALUES (?, ?, ?, ?, ?, ?)`;
-
-  const values = [name, taskData, task_type_id, statusId, nextOrderNumber, parent_task_id || null];
-
-  // Update counter
-  const columnValues = { latest_counter: nextOrderNumber };
-  const condition = { counter_name: 'tasks' };
-  const counter_table_name = 'counter';
-
-  try {
-    const [result] = await db.execute(query, values);
-    await helper.updateTableData(counter_table_name, columnValues, condition);
-    return result;
-  } catch (err) {
-    throw new Error(`Error adding new task: ${JSON.stringify(fields)} - ${err.message}`);
-  }
-}
-
-
 async function addNewTaskCustomFields(fields, newTaskId, table_name) {
   try {
     if (Object.keys(fields).length === 0) {
@@ -198,7 +173,6 @@ module.exports = {
   get_task_type_name,
   getTaskDetails,
   countTotal,
-  addNewTask,
   getCombinedTaskDetails,
   get_all_availble_customFields_for_taskType,
   addNewTaskCustomFields

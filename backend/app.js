@@ -3,12 +3,15 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+
 const { initDatabase } = require('./database');
 const db = initDatabase();
+
 const tasksRoutes = require('./routes/tasks');
 const contactRoutes = require('./routes/contacts');
 const linkedinRoutes = require('./routes/linkedin')
 const commonRoutes = require('./routes/common')
+const emailCampaignRoutes = require("./routes/emailCampaign")
 
 const app = express();
 
@@ -23,6 +26,7 @@ app.use('/api/tasks', tasksRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/linkedin',linkedinRoutes);
 app.use('/api/common',commonRoutes);
+app.use('/api/emailcampaign',emailCampaignRoutes)
 
 // Keep-Alive Query (every 5 minutes)
 setInterval(async () => {

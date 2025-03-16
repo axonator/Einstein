@@ -7,48 +7,48 @@ const { parse, Parser } = require('json2csv');
 const multer = require('multer');
 const csv = require('csv-parser');
 const fs = require('fs');
+const { type } = require('os');
+const { json } = require('body-parser');
 // Set up multer for file uploads
 const upload = multer({ dest: 'uploads/' });
 
 
-  router.post('/get_table_data', async (req, res) => {
-    try {
-      let table_name = req.body.table_name;
-      // Execute the main query
-      let result = await helpers.get_names(table_name,"*")
-      res.json(result);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  });
+  // router.post('/get_table_data', async (req, res) => {
+  //   try {
+  //     let table_name = req.body.table_name;
+  //     // Execute the main query
+  //     let result = await helpers.get_names(table_name,"*")
+  //     res.json(result);
+  //   } catch (err) {
+  //     res.status(500).json({ error: err.message });
+  //   }
+  // });
 
   router.post('/', async (req, res) => {
     try {
       const { 
         page_size,
         page_number,
-        search
+        TableName,
+        Columns,
+        Condition
       } = req.body;
       const offset = (page_number - 1) * page_size;
       const limit = `LIMIT ${page_size} OFFSET ${offset}`
-
-      let searchCondition = "";
-      if (search) {
-          searchCondition = `WHERE first_name LIKE '%${search}%' OR last_name LIKE '%${search}%'`; 
-      }
-      let allcontacts = await helpers.get_names('contact', '*', `${searchCondition} ${limit}`);
       
-      let columns = allcontacts.length > 0 ? Object.keys(allcontacts[0]).filter(key => key) : [];
-      let total = await helpers.countTotal('contact',"*",searchCondition);
+      let allcontacts = await helpers.get_names(TableName, Columns, `${Condition} ${limit}`);
+      
+      let tableColumns = allcontacts.length > 0 ? Object.keys(allcontacts[0]).filter(key => key) : [];
+      let total = await helpers.countTotal(TableName, "*", Condition);
             
       for (const contact of allcontacts) {
-        const {customFieldsFormatted,customFields} = await helpers.getCutsomDetails(contact.id, 'id','contact');
+        const {customFieldsFormatted,customFields} = await helpers.getCutsomDetails(contact.id, 'id',"contact");
         contact.custom_fields = customFieldsFormatted;
         // Merge arrays and keep unique values
-        columns = [...new Set([...columns, ...customFields])];
+        tableColumns = [...new Set([...tableColumns, ...customFields])];
       }
       // Return all contacts with custom fields
-      res.json({allcontacts : allcontacts, total : total, columns:columns});
+      res.json({allcontacts : allcontacts, total : total, tableColumns:tableColumns});
     } catch (err) {
       console.error(err);
       res.status(500).send(err);
@@ -69,14 +69,14 @@ const upload = multer({ dest: 'uploads/' });
   });
 
   //insert new contact
-  router.post('/', async (req, res) => {
-    try {
-      const results = await contactHelpers.add_new_contact(req)
-      res.status(200).json({ message: 'Contact added successfully', id: results.insertId });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  });
+  // router.post('/', async (req, res) => {
+  //   try {
+  //     const results = await contactHelpers.add_new_contact(req)
+  //     res.status(200).json({ message: 'Contact added successfully', id: results.insertId });
+  //   } catch (err) {
+  //     res.status(500).json({ error: err.message });
+  //   }
+  // });
 
   //edit contact
   router.put('/:id', async (req, res) => {
@@ -142,7 +142,7 @@ const upload = multer({ dest: 'uploads/' });
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
-      const fixedColumns = ['first_name','last_name']
+      const fixedColumns = ['first_name','last_name','order_number']
       const availableCustomFields = await taskHelper.get_all_availble_customFields_for_taskType(26);
       
       const customFieldsFormatted = {};
@@ -197,7 +197,7 @@ const upload = multer({ dest: 'uploads/' });
           
           const custom_fields = {}
           let addNewlookup = {
-            "table_name": "lookup",
+            "lookup_table_name": "lookup",
             "columns": ["fk_custom_field_id", "`option`"],
             "values": [],
             "onlyValues":[]
@@ -229,31 +229,19 @@ const upload = multer({ dest: 'uploads/' });
           });
     
           if (addNewlookup['values'].length > 0) {
-              // Construct column names and values string for SQL query
-              const columns = addNewlookup['columns']
-              const onlyValues = addNewlookup['onlyValues']
+            const lookup_table_name = addNewlookup['lookup_table_name'];
+            const column_names = addNewlookup['columns']
+            const onlyValues = addNewlookup['onlyValues']
     
-              const column_names = `(${columns.join(", ")})`;
-    
-              const values_string = addNewlookup['values']
-                .map(valueRow => {
-                  return `(${valueRow
-                    .map(val => {
-                      return typeof val === 'string' ? `'${val}'` : val; // Format value
-                    })
-                    .join(", ")})`;
-                })
-                .join(", ");
-              
-              const response = await helpers.addNewRow(addNewlookup['table_name'], column_names, values_string,onlyValues);
-              
-              // Replace `customFields` values with corresponding IDs
-              const responseMapping = response.data;
-              Object.entries(custom_fields).forEach(([key, value]) => {
-                if (responseMapping[value]) {
-                  custom_fields[key] = responseMapping[value];
-                }
-              });
+            const response = await helpers.addNewRow(lookup_table_name, column_names, onlyValues, onlyValues);
+            
+            // Replace `customFields` values with corresponding IDs
+            const responseMapping = response.data;
+            Object.entries(custom_fields).forEach(([key, value]) => {
+              if (responseMapping[value]) {
+                custom_fields[key] = responseMapping[value];
+              }
+            });
           }
     
           // Extract first name and last name
@@ -274,11 +262,23 @@ const upload = multer({ dest: 'uploads/' });
             counter_name: counter_name,
             table_name: table_name
           }
-          // const latest_counter = await helpers.getLatestCounter(counter_name);
-          formFields['counter'] = latest_counter;
-          const add_contact_results = await contactHelpers.addNewContact(formFields);
-          const newTaskId = add_contact_results.insertId;
+
+          const { first_name,last_name } = formFields;
+          const nextOrderNumber = latest_counter + 1000;
+          const values = [first_name,last_name, nextOrderNumber];
+          const addResult = await helpers.addNewRow(table_name, fixedColumns, values, ['contact_id'])
+          const newTaskId = addResult.contact_id;
+ 
+          if (campaignDetails) {
+            let Body = campaignDetails?.raw_body ?? "THIS IS TEST BODY";
+            Body = helpers.replacePlaceholders(Body,formFields);
     
+            let Subject = campaignDetails?.raw_subject ?? "THIS IS TEST SUBJECT";
+            Subject = helpers.replacePlaceholders(Subject, formFields);
+    
+            const status = 'Draft';
+            helpers.addNewRow("campaign_schedule", ["fk_contact_id", "body","subject","status","fk_campaign_id"], [newTaskId, Body, Subject, status, campaignDetails.id]);
+          }
     
           await taskHelper.addNewTaskCustomFields(custom_fields, newTaskId, table_name);
           resolve(); // Resolve the promise when row processing is complete
@@ -289,7 +289,7 @@ const upload = multer({ dest: 'uploads/' });
         }
       });
       }
-
+      const campaignDetails = JSON.parse(req.body.campaignDetails);
       const filePath = req.file.path;
       const errors = []; // Store errors here
       const processCSV = async () => {
@@ -303,7 +303,7 @@ const upload = multer({ dest: 'uploads/' });
             totalRows++; // Increment row counter
             const updatedCounter = latest_counter + (1000 * totalRows);
             // Store the promise but don't await here
-            const processingTask = processRow(row, updatedCounter);
+            const processingTask = processRow(row, updatedCounter, campaignDetails);
             processingTasks.push(processingTask);
           })
 

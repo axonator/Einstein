@@ -80,7 +80,7 @@ const Listview = ({taskDetails,taskTypeCode,filtertasktype,parenntId,selectedTab
 
   const fetchcustomdropdownlist = async (table_name, column_name="*",condition='',listName) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/get_list`, {
+      const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/common/get_list`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

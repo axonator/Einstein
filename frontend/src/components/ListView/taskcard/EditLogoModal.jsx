@@ -110,7 +110,7 @@ function EditLogoModal({ task, show, onClose }) {
     if (Object.keys(updateCustomFields).length > 0) {
       for (const key in updateCustomFields) { 
         try {
-          await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/updateTaskCustomFields/${task.task_id}`, { newId:updateCustomFields[key] ,customFieldId:key});
+          await axios.post(`${import.meta.env.VITE_LOCAL_URL}/api/common/updateCustomFields/${task.task_id}`, { newId:updateCustomFields[key] ,customFieldId:key});
         } catch (error) {
           console.error("Error updating custom fields:", error);
         }
@@ -121,7 +121,7 @@ function EditLogoModal({ task, show, onClose }) {
     if (Object.keys(newcustomFields).length > 0) {
       try {
         newcustomFields["newTaskId"]=task.task_id
-        const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/tasks/addTaskCustomFields`, {
+        const response = await fetch(`${import.meta.env.VITE_LOCAL_URL}/api/common/addCustomFields`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

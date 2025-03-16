@@ -1,11 +1,49 @@
 const { initDatabase,executeQuery } = require('../database');
 const db = initDatabase();
 
-  async function addNewRow(table_name, column_names, values, VALUES) {
-    const query = `INSERT IGNORE INTO ${table_name} ${column_names} VALUES ${values};`;
+  // async function oldaddNewRow(table_name, column_names, values, Inserted, condition = "") {
+  //   const query = `INSERT IGNORE INTO ${table_name} ${column_names} VALUES ${values} ${condition};`;
+    
+  //   try {
+  //     const [result] = await db.execute(query);
+
+  //     // Calculate the inserted IDs for each row
+  //     const insertedIds = {};
+  //     const insertIdStart = result.insertId; // Start ID from the first inserted row
+  //     const affectedRows = result.affectedRows;
+
+  //     // Loop through the affected rows and format the response as { "value": id }
+  //     for (let i = 0; i < affectedRows; i++) {
+  //       insertedIds[`${Inserted[i]}`] = insertIdStart + i;
+  //     }
+
+  //     return insertedIds; // Return the inserted IDs array
+  //   } catch (err) {
+  //     throw new Error(`Error Inserting: ${err.message}`);
+  //   }
+  // }
+
+  async function addNewRow(table_name, column_names, values, Inserted=[], condition = "") {
+    if (!Array.isArray(column_names) || !Array.isArray(values) || column_names.length === 0 || values.length === 0) {
+        throw new Error("Column names and values must be non-empty arrays.");
+    }
+
+    if (column_names.length != values.length) {
+      throw new Error("Column names and values arrays must be of same length.");
+    }
+
+    // Prepare SQL query dynamically
+    const columns = `(${column_names.join(", ")})`;
+    const placeholders = `(${values.map(() => "?").join(", ")})`;
+    const sql = `INSERT IGNORE INTO ${table_name} ${columns} VALUES ${placeholders} ${condition};`;
     
     try {
-      const [result] = await db.execute(query);
+      const [result] = await db.execute(sql, values);
+      
+      // Handle empty Inserted array
+      if (Inserted.length === 0) {
+          return {};
+      }
 
       // Calculate the inserted IDs for each row
       const insertedIds = {};
@@ -14,14 +52,15 @@ const db = initDatabase();
 
       // Loop through the affected rows and format the response as { "value": id }
       for (let i = 0; i < affectedRows; i++) {
-        insertedIds[`${VALUES[i]}`] = insertIdStart + i;
+        insertedIds[`${Inserted[i]}`] = insertIdStart + i;
       }
 
       return insertedIds; // Return the inserted IDs array
     } catch (err) {
-      throw new Error(`Error Inserting: ${err.message}`);
+        throw new Error(`Error Inserting: ${err.message}`);
     }
   }
+
 
   async function get_names(table_name, column_name, condition = '') {
     const query = `SELECT ${column_name} FROM ${table_name} ${condition};`;
@@ -134,7 +173,7 @@ const db = initDatabase();
     const countQuery = `
     SELECT COUNT(${count_paramater}) AS total
     FROM ${table_name} ${condition};`;
-    
+
     try {
       // Calculate total (Avoid fetching all rows)
       const [countResult] = await executeQuery(countQuery);
@@ -192,6 +231,10 @@ const db = initDatabase();
       throw new Error(`Error fetching custom fields for task id ${id}: ${err}`);
     }
   }
+
+  function replacePlaceholders(textTochange, changeFrom) {
+    return textTochange.replace(/\{(.*?)\}/g, (match, key) => changeFrom[key] || match);
+}
   
 
 module.exports = {
@@ -203,5 +246,6 @@ module.exports = {
   updateTableData,
   addNewRow,
   countTotal,
-  getCutsomDetails
+  getCutsomDetails,
+  replacePlaceholders
 };
