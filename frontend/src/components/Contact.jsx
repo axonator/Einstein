@@ -348,7 +348,7 @@ export default function Contact({table_name="contact", columns = '*', condition 
     <Box sx={{ width: '100%' }} className="noshadow">
         
             <TextField
-                label="Search Contactsss"
+                label="Search Contact"
                 variant="outlined"
                 size="small"
                 value={searchQuery}
