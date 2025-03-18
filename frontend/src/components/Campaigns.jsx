@@ -3,12 +3,10 @@ import IconButton from '@mui/material/IconButton';
 import AddBoxRoundedIcon from '@mui/icons-material/AddBoxRounded';
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import CampaignForm from './form/CampaignForm';
 import { useReactTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, flexRender } from "@tanstack/react-table";
 
 export default function Campaigns() {
-    const navigate = useNavigate(); // Hook to change URL
     const [tableData, setTableData] = useState([]);
     const [columns, setColumns] = useState([]);
     const [showAddForm, setShowAddForm] = React.useState(false);
@@ -18,9 +16,6 @@ export default function Campaigns() {
       };
     
 
-    // async function addCampaign() {
-    //     toggleModal();
-    // }
 
     useEffect(()=>{
         getCampaigns();
@@ -87,7 +82,11 @@ export default function Campaigns() {
                                     onClick={header.column.getToggleSortingHandler()}
                                 >
                                     {flexRender(header.column.columnDef.header, header.getContext())}
-                                    {header.column.getIsSorted() ? (header.column.getIsSorted() === "desc" ? " 🔽" : " 🔼") : ""}
+                                    {header.column.getIsSorted()
+                                        ? header.column.getIsSorted() === "desc"
+                                            ? " 🔽"
+                                            : " 🔼"
+                                        : ""}
                                 </th>
                             ))}
                         </tr>
@@ -95,22 +94,19 @@ export default function Campaigns() {
                 </thead>
                 <tbody className="text-center">
                     {table.getRowModel().rows.map((row) => (
-                        <tr
-                        key={row.id}
-                        className="hover:bg-gray-100 cursor-pointer"
-                        onClick={() => {navigate(`/emails/${row.original.id}`)}}
-                        >
+                        <tr key={row.id} className="hover:bg-gray-100 cursor-pointer">
                             {row.getVisibleCells().map((cell) => (
-                                    <td key={cell.id} className="p-2 border">
+                                <td key={cell.id} className="p-2 border">
+                                    <a href={`/emails/${row.original.id}`} className="text-decoration-none text-dark">
                                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                    </td>
-                                // <a href={row.data}>
-                                // </a>
+                                    </a>
+                                </td>
                             ))}
                         </tr>
                     ))}
                 </tbody>
             </table>
+
 
             {/* Pagination Controls */}
             <div className="flex justify-between mt-2">
