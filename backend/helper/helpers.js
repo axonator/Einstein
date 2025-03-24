@@ -129,7 +129,7 @@ const db = initDatabase();
 
 
 
-  async function getLatestCounter(counterName) {
+  async function getLatestCounter(counterName) { 
     // SQL query to fetch the latest counter based on counterName
     const query = `SELECT latest_counter FROM counter WHERE counter_name = ?;`;
   
