@@ -33,6 +33,7 @@ async function runContinuously() {
       emailHelper.sendEmail(contact);
     }
     setTimeout(runContinuously, 10 * 1000);
+    
 }
 
 // Start the continuous function
